@@ -1,0 +1,100 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id           Int         @id @default(autoincrement())
+  name         String?
+  gender       String?
+  email        String      @unique
+  userName     String      @unique
+  password     String?
+  roleId       Int?
+  status       Int?
+  salaryId     Int?
+  keepSalaryId Int?
+  salaryPlusId Int?
+  keepSalary   KeepSalary? @relation(fields: [keepSalaryId], references: [id])
+  role         Role?       @relation(fields: [roleId], references: [id])
+  salary       Salary?     @relation(fields: [salaryId], references: [id])
+  salaryPlus   SalaryPlus? @relation(fields: [salaryPlusId], references: [id])
+  works        Work[]
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  accounts    Account[]
+  permissions Permission[]
+}
+
+model Permission {
+  id     Int    @id @default(autoincrement())
+  url    String @unique
+  roleId Int?
+  role   Role?  @relation(fields: [roleId], references: [id])
+}
+
+model Salary {
+  id       Int       @id @default(autoincrement())
+  weekday  Int?
+  weekend  Int?
+  name     String    @unique
+  accounts Account[]
+}
+
+model Deduction {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  price Int?
+}
+
+model Work {
+  id              Int               @id @default(autoincrement())
+  date            DateTime?         @db.Timestamptz(6)
+  startTime       DateTime?         @db.Timestamptz(6)
+  endTime         DateTime?         @db.Timestamptz(6)
+  salary          Int?
+  isMopping       Int?
+  accountId       Int?
+  status          Int?
+  salaryDeduction SalaryDeduction[]
+  account         Account?          @relation(fields: [accountId], references: [id])
+}
+
+model SalaryDeduction {
+  id       Int     @id @default(autoincrement())
+  workId   Int?
+  quantity Int?
+  detail   String?
+  cost     Int?
+  work     Work?   @relation(fields: [workId], references: [id])
+}
+
+model WorkError {
+  id            Int       @id @default(autoincrement())
+  date          DateTime? @db.Timestamptz(6)
+  workErrorType Int?
+}
+
+model KeepSalary {
+  id       Int       @id @default(autoincrement())
+  date     String?
+  salary   String?
+  status   Int?
+  accounts Account[]
+}
+
+model SalaryPlus {
+  id       Int       @id @default(autoincrement())
+  name     String?   @unique
+  plus     Int?
+  accounts Account[]
+}
