@@ -11,4 +11,20 @@ export interface PayloadData {
     roleId: number
 }
 
+export interface DeductionDescription {
+  deductionTypeId: number, 
+  deductionId: number,
+  quantity: string,
+  validate: boolean,
+  detail: string
+}
+
+export interface DataSalaryDeduction {
+  id: number,
+  date: string,
+  detail: string,
+  quantity: string,
+  cost: string
+}
+
 export const prisma = new PrismaClient();

@@ -54,6 +54,7 @@ const loginService = async (username: string, password: string): Promise<ReturnD
             data: {
                 id: existAccount.id,
                 roleId: existAccount.roleId,
+                gender: existAccount.gender,
                 token: token
             },
             code: 0
@@ -72,7 +73,7 @@ const reloadPageService = async (decoded: any): Promise<ReturnData> => {
     try {
         const accountLogin = await prisma.account.findUnique({
             where: {id: decoded.id},
-            select: {status: true}
+            select: {status: true, gender: true}
         }) 
         if (!accountLogin) {
             return({
@@ -90,7 +91,10 @@ const reloadPageService = async (decoded: any): Promise<ReturnData> => {
         }
         return({
             message: "Tài khoản hợp lệ",
-            data: true,
+            data: {
+                decoded: decoded,
+                gender: accountLogin.gender
+            },
             code: 0
         })
     } catch(e) {

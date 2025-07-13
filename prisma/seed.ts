@@ -2,6 +2,10 @@ import { Account, Salary, Role } from './../src/generated/prisma/index.d';
 import { PrismaClient } from "../src/generated/prisma";
 import { genSalt, hash } from 'bcrypt-ts';
 
+//Dưới 30p: 4k/phút
+//30p: 100k
+//1h: 200k
+
 const prisma = new PrismaClient();
 const name = [
     "Hà", "Góc", "Thúy", "Thu", "Minh", "Thương", "Thảo",
@@ -29,6 +33,36 @@ const createPassword = async (): Promise<string> => {
     const result = await hash("123456789", salt);
     return result;
 }
+
+const breakName = [
+    "Ly CFS", "Ly CFS phin", "Ly sữa chua", "Ly nước ngọt", "Dĩa", "Ly trà đá nhỏ",
+    "Ly trà đá lớn", "Ly trà nóng", "Tách", "Gạc tàn"
+];
+const breakPrice = [
+    10000, 12000, 32000, 10000, 32000, 10000, 10000, 12000, 30000, 30000
+];
+
+const drinkName = [
+    "Trà đào", "Đá me", "Sâm dứa", "Lipton chanh", "Nước ngọt", "Mì", "Chanh muối",
+    "Thuốc", "Bạc xỉu", "Chanh", "Dừa", "CFS", "CFĐ"
+];
+const drinkPrice = [
+    25000, 20000, 20000, 20000, 15000, 15000, 20000, 15000, 15000,
+    20000, 20000, 15000, 12000
+];
+
+const urlPermission = [
+    "/admin/get-account", "/admin/add-account", "/employee/get-deduction",
+    "/employee/add-work", "/employee/get-work-list", "/employee/delete-work",
+    "/employee/get-work", "/employee/update-work", "/employee/find-work",
+    "/employee/get-salary-deduction"
+]
+const rolePermission = [
+    1, 1, 2, 
+    2, 2, 2, 
+    2, 2, 2,
+    2
+]
 
 const seed = async (): Promise<void> => {
     try {
@@ -79,78 +113,6 @@ const seed = async (): Promise<void> => {
                 plus: 1000
             }
         });
-        // const plusTwo = await prisma.salaryPlus.upsert({
-        //     where: {name: "2000"},
-        //     update: {},
-        //     create: {
-        //         name: "2000",
-        //         plus: 2000
-        //     }
-        // });
-        // const plusThree = await prisma.salaryPlus.upsert({
-        //     where: {name: "3000"},
-        //     update: {},
-        //     create: {
-        //         name: "3000",
-        //         plus: 3000
-        //     }
-        // });
-        // const plusFour = await prisma.salaryPlus.upsert({
-        //     where: {name: "4000"},
-        //     update: {},
-        //     create: {
-        //         name: "4000",
-        //         plus: 4000
-        //     }
-        // });
-        // const plusFive = await prisma.salaryPlus.upsert({
-        //     where: {name: "5000"},
-        //     update: {},
-        //     create: {
-        //         name: "5000",
-        //         plus: 5000
-        //     }
-        // });
-        // const plusSix = await prisma.salaryPlus.upsert({
-        //     where: {name: "6000"},
-        //     update: {},
-        //     create: {
-        //         name: "6000",
-        //         plus: 6000
-        //     }
-        // });
-        // const plusSeven = await prisma.salaryPlus.upsert({
-        //     where: {name: "7000"},
-        //     update: {},
-        //     create: {
-        //         name: "7000",
-        //         plus: 7000
-        //     }
-        // });
-        // const plusEight = await prisma.salaryPlus.upsert({
-        //     where: {name: "8000"},
-        //     update: {},
-        //     create: {
-        //         name: "8000",
-        //         plus: 8000
-        //     }
-        // });
-        // const plusNine = await prisma.salaryPlus.upsert({
-        //     where: {name: "9000"},
-        //     update: {},
-        //     create: {
-        //         name: "9000",
-        //         plus: 9000
-        //     }
-        // });
-        // const plusTen = await prisma.salaryPlus.upsert({
-        //     where: {name: "10000"},
-        //     update: {},
-        //     create: {
-        //         name: "10000",
-        //         plus: 10000
-        //     }
-        // });
 
         // Role
         const adminRole = await prisma.role.upsert({
@@ -169,22 +131,124 @@ const seed = async (): Promise<void> => {
         });
 
         //Permission
-        const getAccounts = await prisma.permission.upsert({
-            where: {url: "/admin/get-account"},
+        //Cách 1: Nhanh, không đảm bảo thứ tự
+        await Promise.all(
+            urlPermission.map(async (item, index) => {
+                return prisma.permission.upsert({
+                    where: {url: item},
+                    update: {},
+                    create: {
+                        url: item,
+                        roleId: rolePermission[index]
+                    }
+                })
+            })
+        )
+        //Cách 2: Chậm vì chạy tuần tự nên đảm bảo thứ tự
+        // for (let i = 0; i < urlPermission.length; i++) {
+        //     await prisma.permission.upsert({
+        //         where: {url: urlPermission[i]},
+        //         update: {},
+        //         create: {
+        //             url: urlPermission[i],
+        //             roleId: rolePermission[i]
+        //         }
+        //     })
+        // }
+
+        //DeductionType
+        const deductionType1 = await prisma.deductionType.upsert({
+            where: {name: "Khác"},
             update: {},
             create: {
-                url: "/admin/get-account",
-                roleId: 1
+                name: "Khác",
+                price: 0,
+                title: "Mô tả"
             }
         })
-        const addAccount = await prisma.permission.upsert({
-            where: {url: "/admin/add-account"},
+        const deductionType2 = await prisma.deductionType.upsert({
+            where: {name: "Ứng lương"},
             update: {},
             create: {
-                url: "/admin/add-account",
-                roleId: 1
+                name: "Ứng lương",
+                price: 0,
+                title: "Số tiền"
             }
         })
+        const deductionType3 = await prisma.deductionType.upsert({
+            where: {name: "Đi trễ"},
+            update: {},
+            create: {
+                name: "Đi trễ",
+                price: 0,
+                title: "Số phút"
+            }
+        })
+        const deductionType4 = await prisma.deductionType.upsert({
+            where: {name: "Thiếu tiền"},
+            update: {},
+            create: {
+                name: "Thiếu tiền",
+                price: 0,
+                title: "Số tiền"
+            }
+        })
+        const deductionType5 = await prisma.deductionType.upsert({
+            where: {name: "Nước tràn"},
+            update: {},
+            create: {
+                name: "Nước tràn",
+                price: 10000,
+                title: "Số lượng"
+            }
+        })
+        const deductionType6 = await prisma.deductionType.upsert({
+            where: {name: "Bể ly"},
+            update: {},
+            create: {
+                name: "Bể ly",
+                price: 0,
+                title: "Số lượng"
+            }
+        })
+        const deductionType7 = await prisma.deductionType.upsert({
+            where: {name: "Nước"},
+            update: {},
+            create: {
+                name: "Nước",
+                price: 0,
+                title: "Số lượng"
+            }
+        })
+
+        //Deduction
+        await Promise.all(
+            breakName.map(async (item, index) => {
+                return prisma.deduction.upsert({
+                    where: {name: breakName[index]},
+                    update: {},
+                    create: {
+                        name: breakName[index],
+                        price: breakPrice[index],
+                        deductionTypeId: 6
+                    }
+                })
+            })
+        )
+
+        await Promise.all(
+            drinkName.map(async (item, index) => {
+                return prisma.deduction.upsert({
+                    where: {name: drinkName[index]},
+                    update: {},
+                    create: {
+                        name: drinkName[index],
+                        price: drinkPrice[index],
+                        deductionTypeId: 7
+                    }
+                })
+            })
+        )
 
         //Account
         const ha = await prisma.account.upsert({

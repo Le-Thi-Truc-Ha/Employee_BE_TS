@@ -26,7 +26,8 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
             message: result.message,
             data: {
                 id: result.data?.id,
-                roleId: result.data?.roleId
+                roleId: result.data?.roleId,
+                gender: result.data?.gender
             },
             code: result.code
         })
@@ -65,7 +66,7 @@ const reloadPageController = async (req: Request, res: Response): Promise<any> =
     if (result.code == 0) {
         return res.status(200).json({
             message: "Token hợp lệ",
-            data: decoded,
+            data: result.data,
             code: 0
         })
     } else {

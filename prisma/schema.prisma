@@ -50,17 +50,29 @@ model Salary {
   accounts Account[]
 }
 
+model DeductionType {
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  price            Int?
+  title            String?
+  deductions       Deduction[]
+  salaryDeductions SalaryDeduction[]
+}
+
 model Deduction {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  price Int?
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  price            Int?
+  deductionTypeId  Int?
+  deductionType    DeductionType?    @relation(fields: [deductionTypeId], references: [id])
+  salaryDeductions SalaryDeduction[]
 }
 
 model Work {
   id              Int               @id @default(autoincrement())
-  date            DateTime?         @db.Timestamptz(6)
-  startTime       DateTime?         @db.Timestamptz(6)
-  endTime         DateTime?         @db.Timestamptz(6)
+  date            String?
+  startTime       String?
+  endTime         String?
   salary          Int?
   isMopping       Int?
   accountId       Int?
@@ -70,17 +82,21 @@ model Work {
 }
 
 model SalaryDeduction {
-  id       Int     @id @default(autoincrement())
-  workId   Int?
-  quantity Int?
-  detail   String?
-  cost     Int?
-  work     Work?   @relation(fields: [workId], references: [id])
+  id              Int            @id @default(autoincrement())
+  workId          Int?
+  deductionTypeId Int?
+  deductionId     Int?
+  quantity        String?
+  detail          String?
+  cost            Int?
+  deduction       Deduction?     @relation(fields: [deductionId], references: [id])
+  deductionType   DeductionType? @relation(fields: [deductionTypeId], references: [id])
+  work            Work?          @relation(fields: [workId], references: [id])
 }
 
 model WorkError {
-  id            Int       @id @default(autoincrement())
-  date          DateTime? @db.Timestamptz(6)
+  id            Int     @id @default(autoincrement())
+  date          String?
   workErrorType Int?
 }
 

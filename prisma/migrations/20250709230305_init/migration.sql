@@ -1,66 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Account` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Deduction` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `KeepSalary` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Permission` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Role` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Salary` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `SalaryDeduction` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `SalaryPlus` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Work` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `WorkError` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropForeignKey
-ALTER TABLE "public"."Account" DROP CONSTRAINT "Account_keepSalaryId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."Account" DROP CONSTRAINT "Account_roleId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."Account" DROP CONSTRAINT "Account_salaryId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."Permission" DROP CONSTRAINT "Permission_roleId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."SalaryDeduction" DROP CONSTRAINT "SalaryDeduction_workId_fkey";
-
--- DropForeignKey
-ALTER TABLE "public"."Work" DROP CONSTRAINT "Work_accountId_fkey";
-
--- DropTable
-DROP TABLE "public"."Account";
-
--- DropTable
-DROP TABLE "public"."Deduction";
-
--- DropTable
-DROP TABLE "public"."KeepSalary";
-
--- DropTable
-DROP TABLE "public"."Permission";
-
--- DropTable
-DROP TABLE "public"."Role";
-
--- DropTable
-DROP TABLE "public"."Salary";
-
--- DropTable
-DROP TABLE "public"."SalaryDeduction";
-
--- DropTable
-DROP TABLE "public"."SalaryPlus";
-
--- DropTable
-DROP TABLE "public"."Work";
-
--- DropTable
-DROP TABLE "public"."WorkError";
-
 -- CreateTable
 CREATE TABLE "Account" (
     "id" SERIAL NOT NULL,
@@ -106,10 +43,21 @@ CREATE TABLE "Salary" (
 );
 
 -- CreateTable
+CREATE TABLE "DeductionType" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "price" INTEGER,
+    "title" TEXT,
+
+    CONSTRAINT "DeductionType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Deduction" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "price" INTEGER,
+    "deductionTypeId" INTEGER,
 
     CONSTRAINT "Deduction_pkey" PRIMARY KEY ("id")
 );
@@ -117,9 +65,9 @@ CREATE TABLE "Deduction" (
 -- CreateTable
 CREATE TABLE "Work" (
     "id" SERIAL NOT NULL,
-    "date" TIMESTAMPTZ(6),
-    "startTime" TIMESTAMPTZ(6),
-    "endTime" TIMESTAMPTZ(6),
+    "date" TEXT,
+    "startTime" TEXT,
+    "endTime" TEXT,
     "salary" INTEGER,
     "isMopping" INTEGER,
     "accountId" INTEGER,
@@ -132,7 +80,9 @@ CREATE TABLE "Work" (
 CREATE TABLE "SalaryDeduction" (
     "id" SERIAL NOT NULL,
     "workId" INTEGER,
-    "quantity" INTEGER,
+    "deductionTypeId" INTEGER,
+    "deductionId" INTEGER,
+    "quantity" TEXT,
     "detail" TEXT,
     "cost" INTEGER,
 
@@ -142,7 +92,7 @@ CREATE TABLE "SalaryDeduction" (
 -- CreateTable
 CREATE TABLE "WorkError" (
     "id" SERIAL NOT NULL,
-    "date" TIMESTAMPTZ(6),
+    "date" TEXT,
     "workErrorType" INTEGER,
 
     CONSTRAINT "WorkError_pkey" PRIMARY KEY ("id")
@@ -183,6 +133,9 @@ CREATE UNIQUE INDEX "Permission_url_key" ON "Permission"("url");
 CREATE UNIQUE INDEX "Salary_name_key" ON "Salary"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "DeductionType_name_key" ON "DeductionType"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Deduction_name_key" ON "Deduction"("name");
 
 -- CreateIndex
@@ -204,7 +157,16 @@ ALTER TABLE "Account" ADD CONSTRAINT "Account_salaryPlusId_fkey" FOREIGN KEY ("s
 ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Deduction" ADD CONSTRAINT "Deduction_deductionTypeId_fkey" FOREIGN KEY ("deductionTypeId") REFERENCES "DeductionType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Work" ADD CONSTRAINT "Work_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_deductionId_fkey" FOREIGN KEY ("deductionId") REFERENCES "Deduction"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_deductionTypeId_fkey" FOREIGN KEY ("deductionTypeId") REFERENCES "DeductionType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE SET NULL ON UPDATE CASCADE;
