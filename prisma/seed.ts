@@ -55,13 +55,13 @@ const urlPermission = [
     "/admin/get-account", "/admin/add-account", "/employee/get-deduction",
     "/employee/add-work", "/employee/get-work-list", "/employee/delete-work",
     "/employee/get-work", "/employee/update-work", "/employee/find-work",
-    "/employee/get-salary-deduction"
+    "/employee/get-salary-deduction", "/admin/find-account", "/admin/get-account-information"
 ]
 const rolePermission = [
     1, 1, 2, 
     2, 2, 2, 
     2, 2, 2,
-    2
+    2, 1, 1
 ]
 
 const seed = async (): Promise<void> => {

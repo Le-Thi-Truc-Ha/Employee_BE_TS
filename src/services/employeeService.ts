@@ -154,7 +154,7 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
         
         return({
             message: "Thêm ca làm thành công",
-            data: result.id,
+            data: result,
             code: 0
         })
     } catch(e) {

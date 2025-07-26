@@ -26,6 +26,9 @@ model Account {
   salary       Salary?     @relation(fields: [salaryId], references: [id])
   salaryPlus   SalaryPlus? @relation(fields: [salaryPlusId], references: [id])
   works        Work[]
+
+  @@index([roleId])
+  @@index([status])
 }
 
 model Role {
@@ -40,6 +43,8 @@ model Permission {
   url    String @unique
   roleId Int?
   role   Role?  @relation(fields: [roleId], references: [id])
+
+  @@index([roleId])
 }
 
 model Salary {
@@ -79,6 +84,9 @@ model Work {
   status          Int?
   salaryDeduction SalaryDeduction[]
   account         Account?          @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([status])
 }
 
 model SalaryDeduction {
@@ -92,6 +100,8 @@ model SalaryDeduction {
   deduction       Deduction?     @relation(fields: [deductionId], references: [id])
   deductionType   DeductionType? @relation(fields: [deductionTypeId], references: [id])
   work            Work?          @relation(fields: [workId], references: [id])
+
+  @@index([workId])
 }
 
 model WorkError {
@@ -106,6 +116,8 @@ model KeepSalary {
   salary   String?
   status   Int?
   accounts Account[]
+
+  @@index([status])
 }
 
 model SalaryPlus {

@@ -124,10 +124,19 @@ CREATE UNIQUE INDEX "Account_email_key" ON "Account"("email");
 CREATE UNIQUE INDEX "Account_userName_key" ON "Account"("userName");
 
 -- CreateIndex
+CREATE INDEX "Account_roleId_idx" ON "Account"("roleId");
+
+-- CreateIndex
+CREATE INDEX "Account_status_idx" ON "Account"("status");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_url_key" ON "Permission"("url");
+
+-- CreateIndex
+CREATE INDEX "Permission_roleId_idx" ON "Permission"("roleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Salary_name_key" ON "Salary"("name");
@@ -137,6 +146,18 @@ CREATE UNIQUE INDEX "DeductionType_name_key" ON "DeductionType"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Deduction_name_key" ON "Deduction"("name");
+
+-- CreateIndex
+CREATE INDEX "Work_accountId_idx" ON "Work"("accountId");
+
+-- CreateIndex
+CREATE INDEX "Work_status_idx" ON "Work"("status");
+
+-- CreateIndex
+CREATE INDEX "SalaryDeduction_workId_idx" ON "SalaryDeduction"("workId");
+
+-- CreateIndex
+CREATE INDEX "KeepSalary_status_idx" ON "KeepSalary"("status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SalaryPlus_name_key" ON "SalaryPlus"("name");
