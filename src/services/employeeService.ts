@@ -76,12 +76,23 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
             weekdaySalary += existAccount.salaryPlus?.plus;
             weekendSalary += existAccount.salaryPlus?.plus;
         }
-        let salary: number = 0;
+        let salary: string = "";
         if (dayjs(date, "DD/MM/YYYY").day() == 0) {
-            salary = weekendSalary;
+            const start = dayjs(startTime, "HH:mm");
+            const end = dayjs(endTime, "HH:mm");
+            const inWeekday = start.isBefore(dayjs("22:30", "HH:mm")) && end.isAfter(dayjs("12:00", "HH:mm"));
+            const inWeekend = start.isBefore(dayjs("12:00", "HH:mm")) && end.isAfter(dayjs("06:30", "HH:mm"));
+            if (inWeekday && inWeekend) {
+                salary = weekdaySalary.toString().concat("=").concat(weekendSalary.toString());
+            } else if (inWeekday) {
+                salary = weekdaySalary.toString();
+            } else if (inWeekend) {
+                salary = weekendSalary.toString();
+            }
         } else {
-            salary = weekdaySalary;
+            salary = weekdaySalary.toString();
         }
+        
         const priceDeductions = await Promise.all(
             deductionSelect.map(async (item, index) => {
                 if (item.deductionId == 0) {
@@ -175,7 +186,9 @@ const getWorkListService = async (accountId: number, roleId: number, month: numb
                 works: {
                     where: {
                         AND: [
-                            {status: 1},
+                            {status: {
+                                in: [1, 2]
+                            }},
                             {date: {
                                 contains: `${month + 1 < 10 ? `/0${month + 1}/${year}` : `/${month + 1}/${year}`}`
                             }}
@@ -362,11 +375,21 @@ const updateWorkService = async (workId: number, date: string, startTime: string
             weekdaySalary += existAccount.salaryPlus?.plus;
             weekendSalary += existAccount.salaryPlus?.plus;
         }
-        let salary: number = 0;
+        let salary: string = "";
         if (dayjs(date, "DD/MM/YYYY").day() == 0) {
-            salary = weekendSalary;
+            const start = dayjs(startTime, "HH:mm");
+            const end = dayjs(endTime, "HH:mm");
+            const inWeekday = start.isBefore(dayjs("22:30", "HH:mm")) && end.isAfter(dayjs("12:00", "HH:mm"));
+            const inWeekend = start.isBefore(dayjs("12:00", "HH:mm")) && end.isAfter(dayjs("06:30", "HH:mm"));
+            if (inWeekday && inWeekend) {
+                salary = weekdaySalary.toString().concat("=").concat(weekendSalary.toString());
+            } else if (inWeekday) {
+                salary = weekdaySalary.toString();
+            } else if (inWeekend) {
+                salary = weekendSalary.toString();
+            }
         } else {
-            salary = weekdaySalary;
+            salary = weekdaySalary.toString();
         }
         const priceDeductions = await Promise.all(
             deductionDescription.map(async (item, index) => {

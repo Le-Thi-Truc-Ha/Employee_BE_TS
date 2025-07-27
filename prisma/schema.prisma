@@ -78,7 +78,7 @@ model Work {
   date            String?
   startTime       String?
   endTime         String?
-  salary          Int?
+  salary          String?
   isMopping       Int?
   accountId       Int?
   status          Int?
