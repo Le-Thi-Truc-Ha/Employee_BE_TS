@@ -21,7 +21,12 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
                 code: result.code
             })
         }
-        res.cookie("token", result.data.token, {httpOnly: true, maxAge: 60 * 1000 * 60 * 24});
+        res.cookie("token", result.data.token, {
+            httpOnly: true, 
+            secure: true,
+            sameSite: "none",
+            maxAge: 60 * 1000 * 60 * 24
+        });
         return res.status(200).json({
             message: result.message,
             data: {
