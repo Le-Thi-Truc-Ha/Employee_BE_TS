@@ -1,4 +1,3 @@
-import { Salary, KeepSalary } from './../generated/prisma/index.d';
 import { genSalt, hash } from "bcrypt-ts";
 import { prisma, ReturnData } from "../configs/interfaces";
 import employeeService from "./employeeService";

@@ -10,7 +10,7 @@
     "prebuild": "rimraf dist",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "serve": "node dist/index.ts",
+    "serve": "node dist/index.js",
     "start": "npm run build && npm run serve"
   },
   "author": "trucha123",

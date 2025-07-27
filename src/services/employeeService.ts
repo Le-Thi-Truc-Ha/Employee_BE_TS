@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { DataSalaryDeduction, DeductionDescription, prisma, ReturnData } from "../configs/interfaces";
 import { sendEmail } from "../configs/email";
-import { PrismaClientKnownRequestError } from "../generated/prisma/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 dayjs.extend(customParseFormat);
 

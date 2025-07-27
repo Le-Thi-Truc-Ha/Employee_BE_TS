@@ -1,5 +1,4 @@
-import { Account, Salary, Role } from './../src/generated/prisma/index.d';
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from '@prisma/client';
 import { genSalt, hash } from 'bcrypt-ts';
 
 //Dưới 30p: 4k/phút
