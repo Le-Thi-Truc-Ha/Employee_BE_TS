@@ -3,6 +3,9 @@ import { ReturnData } from "../configs/interfaces";
 import appService from "../services/appService";
 import jwt from "../middleware/jwt";
 
+const awakeBackendController = (req: Request, res: Response): any => {
+    return res.status(200).send("Awake Success");
+}
 const loginController = async (req: Request, res: Response): Promise<any> => {
     try {
         const {username, password} = req.body;
@@ -242,6 +245,6 @@ const changePasswordController = async (req: Request, res: Response): Promise<an
 }
 
 export default {
-    loginController, reloadPageController, logoutController, getProfileController,
-    changeProfileController, changePasswordController
+    awakeBackendController, loginController, reloadPageController, logoutController, 
+    getProfileController, changeProfileController, changePasswordController
 }

@@ -3,6 +3,7 @@ import appController from "../controllers/appController";
 
 let appRoute = express.Router();
 
+appRoute.get("/", appController.awakeBackendController);
 appRoute.post("/login", appController.loginController);
 appRoute.get("/reload-page", appController.reloadPageController);
 appRoute.get("/logout", appController.logoutController);
