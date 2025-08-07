@@ -19,7 +19,9 @@ const loginService = async (username: string, password: string): Promise<ReturnD
                 gender: true, 
                 roleId: true,
                 password: true,
-                keepSalary: true
+                keepSalary: {
+                    where: {status: 0}
+                }
             }
         });
 

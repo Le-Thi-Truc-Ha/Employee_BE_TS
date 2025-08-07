@@ -54,13 +54,21 @@ const urlPermission = [
     "/admin/get-account", "/admin/add-account", "/employee/get-deduction",
     "/employee/add-work", "/employee/get-work-list", "/employee/delete-work",
     "/employee/get-work", "/employee/update-work", "/employee/find-work",
-    "/employee/get-salary-deduction", "/admin/find-account", "/admin/get-account-information"
+    "/employee/get-salary-deduction", "/admin/find-account", "/admin/get-account-information",
+    "/admin/update-employee-account", "/admin/reset-employee-password", "/admin/delete-employee",
+    "/admin/get-employee-list", "/admin/get-deduction", "/admin/add-work",
+    "/admin/get-work-list", "/admin/delete-work", "/admin/get-work",
+    "/admin/update-work", "/admin/get-salary-deduction", "/admin/add-keep-salary"
 ]
 const rolePermission = [
     1, 1, 2, 
     2, 2, 2, 
     2, 2, 2,
-    2, 1, 1
+    2, 1, 1,
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1
 ]
 
 const seed = async (): Promise<void> => {
@@ -184,6 +192,30 @@ const seed = async (): Promise<void> => {
             }
         })
         const deductionType4 = await prisma.deductionType.upsert({
+            where: {name: "Trễ dưới 10 phút"},
+            update: {},
+            create: {
+                name: "Trễ dưới 10 phút",
+                price: 20000
+            }
+        })
+        const deductionType5 = await prisma.deductionType.upsert({
+            where: {name: "Trễ dưới 30 phút"},
+            update: {},
+            create: {
+                name: "Trễ dưới 30 phút",
+                price: 100000
+            }
+        })
+        const deductionType6 = await prisma.deductionType.upsert({
+            where: {name: "Trễ dưới 60 phút"},
+            update: {},
+            create: {
+                name: "Trễ dưới 60 phút",
+                price: 200000
+            }
+        })
+        const deductionType7 = await prisma.deductionType.upsert({
             where: {name: "Thiếu tiền"},
             update: {},
             create: {
@@ -192,7 +224,7 @@ const seed = async (): Promise<void> => {
                 title: "Số tiền"
             }
         })
-        const deductionType5 = await prisma.deductionType.upsert({
+        const deductionType8 = await prisma.deductionType.upsert({
             where: {name: "Nước tràn"},
             update: {},
             create: {
@@ -201,24 +233,35 @@ const seed = async (): Promise<void> => {
                 title: "Số lượng"
             }
         })
-        const deductionType6 = await prisma.deductionType.upsert({
+        const deductionType9 = await prisma.deductionType.upsert({
+            where: {name: "Bỏ ca"},
+            update: {},
+            create: {
+                name: "Bỏ ca",
+                price: 300000
+            }
+        })
+        const deductionType20 = await prisma.deductionType.upsert({
             where: {name: "Bể ly"},
             update: {},
             create: {
+                id: 20,
                 name: "Bể ly",
                 price: 0,
                 title: "Số lượng"
             }
         })
-        const deductionType7 = await prisma.deductionType.upsert({
+        const deductionType21 = await prisma.deductionType.upsert({
             where: {name: "Nước"},
             update: {},
             create: {
+                id: 21,
                 name: "Nước",
                 price: 0,
                 title: "Số lượng"
             }
         })
+        
 
         //Deduction
         await Promise.all(
@@ -229,7 +272,7 @@ const seed = async (): Promise<void> => {
                     create: {
                         name: breakName[index],
                         price: breakPrice[index],
-                        deductionTypeId: 6
+                        deductionTypeId: 20
                     }
                 })
             })
@@ -243,7 +286,7 @@ const seed = async (): Promise<void> => {
                     create: {
                         name: drinkName[index],
                         price: drinkPrice[index],
-                        deductionTypeId: 7
+                        deductionTypeId: 21
                     }
                 })
             })

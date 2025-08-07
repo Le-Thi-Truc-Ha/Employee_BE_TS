@@ -9,21 +9,21 @@ datasource db {
 }
 
 model Account {
-  id           Int         @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String?
   gender       String?
-  email        String      @unique
-  userName     String      @unique
+  email        String        @unique
+  userName     String        @unique
   password     String?
   roleId       Int?
   status       Int?
   salaryId     Int?
-  keepSalaryId Int?
   salaryPlusId Int?
-  keepSalary   KeepSalary? @relation(fields: [keepSalaryId], references: [id])
-  role         Role?       @relation(fields: [roleId], references: [id])
-  salary       Salary?     @relation(fields: [salaryId], references: [id])
-  salaryPlus   SalaryPlus? @relation(fields: [salaryPlusId], references: [id])
+  role         Role?         @relation(fields: [roleId], references: [id])
+  salary       Salary?       @relation(fields: [salaryId], references: [id])
+  salaryPlus   SalaryPlus?   @relation(fields: [salaryPlusId], references: [id])
+  keepSalary   KeepSalary?
+  summaryWorks SummaryWork[]
   works        Work[]
 
   @@index([roleId])
@@ -82,7 +82,7 @@ model Work {
   accountId       Int?
   status          Int?
   salaryDeduction SalaryDeduction[]
-  account         Account?          @relation(fields: [accountId], references: [id])
+  account         Account?          @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([accountId])
   @@index([status])
@@ -98,7 +98,7 @@ model SalaryDeduction {
   cost            Int?
   deduction       Deduction?     @relation(fields: [deductionId], references: [id])
   deductionType   DeductionType? @relation(fields: [deductionTypeId], references: [id])
-  work            Work?          @relation(fields: [workId], references: [id])
+  work            Work?          @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   @@index([workId])
 }
@@ -110,11 +110,14 @@ model WorkError {
 }
 
 model KeepSalary {
-  id       Int       @id @default(autoincrement())
-  date     String?
-  salary   String?
-  status   Int?
-  accounts Account[]
+  id          Int          @id @default(autoincrement())
+  workId      String?
+  date        String?
+  salary      String?
+  status      Int?
+  accountId   Int?         @unique
+  account     Account?     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  summaryWork SummaryWork?
 
   @@index([status])
 }
@@ -124,4 +127,16 @@ model SalaryPlus {
   name     String?   @unique
   plus     Int?
   accounts Account[]
+}
+
+model SummaryWork {
+  id           Int         @id @default(autoincrement())
+  month        Int
+  year         Int
+  keepSalaryId Int?        @unique
+  accountId    Int?
+  account      Account?    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  keepSalary   KeepSalary? @relation(fields: [keepSalaryId], references: [id])
+
+  @@unique([month, year, accountId], name: "keySummaryWork")
 }

@@ -92,7 +92,18 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
         } else {
             salary = weekdaySalary.toString();
         }
-        
+        const nameLate: string[] = ["Trễ dưới 10 phút", "Trễ dưới 30 phút", "Trễ dưới 60 phút"]; 
+        const costLate = await prisma.deductionType.findMany({
+            where: {
+                name: {
+                    in: nameLate
+                }
+            },
+            select: {
+                name: true,
+                price: true
+            }
+        })
         const priceDeductions = await Promise.all(
             deductionSelect.map(async (item, index) => {
                 if (item.deductionId == 0) {
@@ -119,13 +130,29 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
                     } else if (titleDeduction?.title == "Số tiền") {
                         return parseInt(item.quantity);
                     } else if (titleDeduction?.title == "Số phút") {
-                        if (parseInt(item.quantity) < 30) {
-                            return parseInt(item.quantity) * 4000;
+                        if (parseInt(item.quantity) < 10) {
+                            return costLate.filter((item)  => (item.name == nameLate[0]))[0].price;
+                        } else if (parseInt(item.quantity) >= 10 && parseInt(item.quantity) < 30) {
+                            return costLate.filter((item)  => (item.name == nameLate[1]))[0].price;
+                        } else if (parseInt(item.quantity) >= 30 && parseInt(item.quantity) <= 60) {
+                            return costLate.filter((item)  => (item.name == nameLate[2]))[0].price;
                         } else {
-                            return Math.round((100000 / 30 * parseInt(item.quantity)) * 10) / 10;
+                            await sendEmail(
+                                "hale071204@gmail.com",
+                                "Xem lại thời gian đi trễ",
+                                `
+                                    <h1>Tên: ${existAccount.name}</h1>
+                                    <h1>Username: ${existAccount.userName}</h1>
+                                    <h1>Ca làm ngày: ${date}\n</h1>
+                                    <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
+                                `
+                            )
+                            return 0;
                         }
                     } else if (titleDeduction?.title == "Số lượng") {
                         return (titleDeduction.price || 1) * parseInt(item.quantity);
+                    } else if (!titleDeduction?.title) {
+                        return (titleDeduction?.price)
                     }
                 } else {
                     const priceDeduction = await prisma.deduction.findUnique({
@@ -138,6 +165,22 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
                 }
             })
         )
+        const [day, month, year] = date.split("/").map((item) => (parseInt(item)));
+        const checkSummary = await prisma.summaryWork.upsert({
+            where: {
+                keySummaryWork: {
+                    month: month,
+                    year: year,
+                    accountId: accountId
+                }
+            },
+            update: {},
+            create: {
+                month: month,
+                year: year,
+                accountId: accountId
+            }
+        })
         const result = await prisma.$transaction(async (tx) => {
             const addWork = await tx.work.create({
                 data: {
@@ -178,7 +221,7 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
     }
 }
 
-const getWorkListService = async (accountId: number, roleId: number, month: number, year: number): Promise<ReturnData> => {
+const getWorkListService = async (accountId: number, month: number, year: number): Promise<ReturnData> => {
     try {
         const existAccount = await prisma.account.findUnique({
             where: {id: accountId},
@@ -194,9 +237,18 @@ const getWorkListService = async (accountId: number, roleId: number, month: numb
                             }}
                         ]
                     }
+                },
+                keepSalary: {
+                    where: {
+                        status: 0
+                    },
+                    select: {
+                        id: true,
+                        salary: true
+                    }
                 }
             }
-        })
+        });
         if (!existAccount) {
             return({
                 message: "Tài khoản không tồn tại",
@@ -204,9 +256,33 @@ const getWorkListService = async (accountId: number, roleId: number, month: numb
                 code: 1
             })
         }
+        let isPayKeepSalary: boolean = false;
+        const summaryWork = await prisma.summaryWork.findMany({
+            where: {
+                AND: [
+                    {month: month + 1},
+                    {year: year},
+                    {accountId: accountId}
+                ]
+            },
+            select: {
+                keepSalaryId: true,
+                month: true,
+                year: true
+            }
+        });
+        if (summaryWork.length == 1) {
+            if (summaryWork[0].keepSalaryId != null && summaryWork[0].month == month + 1 && summaryWork[0].year == year) {
+                isPayKeepSalary = true;
+            }
+        }
         return({
             message: "Lấy thông tin thành công",
-            data: existAccount.works,
+            data: {
+                works: existAccount.works,
+                keepSalary: existAccount.keepSalary,
+                isPayKeepSalary: isPayKeepSalary
+            },
             code: 0
         })
     } catch(e) {
@@ -391,6 +467,17 @@ const updateWorkService = async (workId: number, date: string, startTime: string
         } else {
             salary = weekdaySalary.toString();
         }
+        const nameLate: string[] = ["Trễ dưới 10 phút", "Trễ dưới 30 phút", "Trễ dưới 60 phút"]; 
+        const costLate = await prisma.deductionType.findMany({
+            where: {
+                name: {
+                    in: nameLate
+                }
+            },
+            select: {
+                price: true
+            }
+        })
         const priceDeductions = await Promise.all(
             deductionDescription.map(async (item, index) => {
                 if (item.deductionId == 0) {
@@ -417,13 +504,29 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                     } else if (titleDeduction?.title == "Số tiền") {
                         return parseInt(item.quantity);
                     } else if (titleDeduction?.title == "Số phút") {
-                        if (parseInt(item.quantity) < 30) {
-                            return parseInt(item.quantity) * 4000;
+                        if (parseInt(item.quantity) < 10) {
+                            return costLate[0].price;
+                        } else if (parseInt(item.quantity) >= 10 && parseInt(item.quantity) < 30) {
+                            return costLate[1].price;
+                        } else if (parseInt(item.quantity) >= 30 && parseInt(item.quantity) <= 60) {
+                            return costLate[2].price;
                         } else {
-                            return Math.round((100000 / 30 * parseInt(item.quantity)) * 10) / 10;
+                            await sendEmail(
+                                "hale071204@gmail.com",
+                                "Xem lại thời gian đi trễ",
+                                `
+                                    <h1>Tên: ${existAccount.name}</h1>
+                                    <h1>Username: ${existAccount.userName}</h1>
+                                    <h1>Ca làm ngày: ${date}\n</h1>
+                                    <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
+                                `
+                            )
+                            return 0;
                         }
                     } else if (titleDeduction?.title == "Số lượng") {
                         return (titleDeduction.price || 1) * parseInt(item.quantity);
+                    } else if (!titleDeduction?.title) {
+                        return (titleDeduction?.price)
                     }
                 } else {
                     const priceDeduction = await prisma.deduction.findUnique({
@@ -572,11 +675,6 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
         const salaryDeductions: DataSalaryDeduction[] = [];
         result.map((itemParent) => {
             itemParent.map((itemChild) => {
-                // id: number,
-                // date: string,
-                // detail: string,
-                // quantity: string,
-                // cost: number
                 const id = itemChild.id;
                 const date = itemChild.work?.date || "";
                 let detail: string = "";
@@ -592,12 +690,12 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
                         quantity = itemChild.quantity || "";
                         cost = itemChild.cost ? `${itemChild.cost.toLocaleString("en-US")}đ` : "";
                     }
-                    if (itemChild.deductionTypeId == 6 && itemChild.deductionId != null) {
+                    if (itemChild.deductionTypeId == 20 && itemChild.deductionId != null) {
                         detail = itemChild.detail ? `Bể ${itemChild.detail.toLowerCase()}` : "";
                         quantity = itemChild.quantity || "";
                         cost = itemChild.cost ? `${itemChild.cost.toLocaleString("en-US")}đ` : "";
                     }
-                    if (itemChild.deductionTypeId == 7 && itemChild.deductionId != null) {
+                    if (itemChild.deductionTypeId == 21 && itemChild.deductionId != null) {
                         detail = itemChild.detail || "";
                         quantity = itemChild.quantity || "";
                         cost = itemChild.cost ? `${itemChild.cost.toLocaleString("en-US")}đ` : "";
@@ -623,5 +721,5 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
 
 export default {
     getDeductionService, addWorkService, getWorkListService, deleteWorkService,
-    getWorkService, updateWorkService, findWorkService, getSalaryDeductionService
+    getWorkService, updateWorkService, findWorkService, getSalaryDeductionService,
 }

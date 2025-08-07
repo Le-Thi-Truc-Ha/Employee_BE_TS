@@ -326,7 +326,285 @@ const getAccountInformationService = async (accountId: number): Promise<ReturnDa
     }
 }
 
+const updateEmployeeAccountService = async (
+    employeeId: number, 
+    name: string, 
+    gender: string, 
+    userName: string, 
+    roleId: number, 
+    salaryId: number, 
+    salaryPlusId: number
+): Promise<ReturnData> => {
+    try {
+        const existEmployee = await prisma.account.findUnique({
+            where: {id: employeeId}
+        });
+        if (!existEmployee) {
+            return({
+                message: "Không tìm thấy tài khoản nhân viên",
+                data: false,
+                code: 1
+            })
+        }
+
+        const duplicateAccount = await prisma.account.findFirst({
+            where: {
+                AND: [
+                    {userName: userName},
+                    {id: {
+                        not: employeeId
+                    }}
+                ]
+            }
+        });
+        if (duplicateAccount) {
+            return({
+                message: "Tên đăng nhập đã tồn tại",
+                data: false,
+                code: 1
+            })
+        }
+        const updateEmployee = await prisma.account.update({
+            where: {id: employeeId},
+            data: {
+                name: name,
+                gender: gender,
+                userName: userName,
+                roleId: roleId,
+                salaryId: salaryId,
+                salaryPlusId: salaryPlusId == -1 ? null : salaryPlusId
+            }
+        })
+        if (!updateEmployee) {
+            return({
+                message: "Cập nhật không thành công",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Cập nhật thành công",
+            data: true,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const resetEmployeePasswordService = async (employeeId: number, newPassword: string): Promise<ReturnData> => {
+    try {
+        const existEmployee = await prisma.account.findUnique({
+            where: {id: employeeId},
+            select: {
+                id: true
+            }
+        });
+        if (!existEmployee) {
+            return({
+                message: "Không tìm thấy tài khoản nhân viên",
+                data: false,
+                code: 1
+            })
+        }
+        const salt = await genSalt(10);
+        const hashPassword = await hash(newPassword, salt);
+        const resetPassword = await prisma.account.update({
+            where: {id: employeeId},
+            data: {password: hashPassword}
+        })
+        if (!resetPassword) {
+            return({
+                message: "Đặt lại mật khẩu không thành công",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Đặt lại mật khẩu thành công",
+            data: true,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteEmployeeService = async (employeeId: number): Promise<ReturnData> => {
+    try {
+        const existEmployee = await prisma.account.findUnique({
+            where: {id: employeeId},
+            select: {id: true}
+        });
+        if (!existEmployee) {
+            return({
+                message: "Tài khoản nhân viên không tồn tại",
+                data: false,
+                code: 1
+            });
+        }
+        const deleteEmployee = await prisma.account.delete({
+            where: {id: employeeId}
+        })
+        if (!deleteEmployee) {
+            return({
+                message: "Xóa tài khoản thất bại",
+                data: false,
+                code: 1
+            });
+        }
+        return({
+            message: "Xóa tài khoản thành công",
+            data: true,
+            code: 0
+        });
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const getEmployeeListService = async (): Promise<ReturnData> => {
+    try {
+        const employeeList = await prisma.account.findMany({
+            where: {
+                AND: [
+                    {status: 1},
+                    {roleId: 2}
+                ]
+            }, 
+            select: {
+                id: true,
+                name: true
+            }
+        })
+        return({
+            message: "Lấy dữ liệu thành công",
+            data: employeeList,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const addKeepSalaryService = async (idSelect: number[], date: string, salary: string, employeeId: number): Promise<ReturnData> => {
+    try {
+        const existEmployee = await prisma.account.findMany({
+            where: {
+                AND: [
+                    {id: employeeId},
+                    {status: 1}
+                ]
+            },
+            select: {
+                keepSalary: true
+            }
+        })
+        if (existEmployee.length != 1) {
+            return({
+                message: "Dữ liệu không hợp lệ",
+                data: false,
+                code: 1
+            })
+        }
+        // let addKeepSalary: any; 
+        // if (!existEmployee[0].keepSalary) {
+        //     addKeepSalary = await prisma.keepSalary.create({
+        //         data: {
+        //             date: date,
+        //             salary: salary,
+        //             accountId: employeeId
+        //         }
+        //     })
+        // } else {
+
+        // }
+        const idString = idSelect.join("=");
+        const result = await prisma.$transaction(async (tx) => {
+            let addKeepSalary: any;
+            let oldWorkId: number[] | undefined;
+            if (!existEmployee[0].keepSalary) {
+                addKeepSalary = await prisma.keepSalary.create({
+                    data: {
+                        workId: idString,
+                        date: date,
+                        salary: salary,
+                        status: 0,
+                        accountId: employeeId
+                    }
+                })
+            } else {
+                const keepSalaryId = existEmployee[0].keepSalary.id;
+                oldWorkId = existEmployee[0].keepSalary.workId?.split("=").map((item) => (parseInt(item)));
+                addKeepSalary = await prisma.keepSalary.update({
+                    where: {id: keepSalaryId},
+                    data: {
+                        workId: idString,
+                        date: date,
+                        salary: salary,
+                    }
+                })
+            }
+            const updateOldWorkStatus = await prisma.work.updateMany({
+                where: {
+                    id: {
+                        in: oldWorkId
+                    }
+                },
+                data: {
+                    status: 1
+                }
+            })
+            const updateNewWorkStatus = await prisma.work.updateMany({
+                where: {
+                    id: {
+                        in: idSelect
+                    }
+                },
+                data: {
+                    status: 2
+                }
+            })
+            return addKeepSalary;
+        })
+        return({
+            message: "Thành công",
+            data: result,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
 export default {
     addAccountService, getAccountListService, findAccountService,
-    getAccountInformationService
+    getAccountInformationService, updateEmployeeAccountService,
+    resetEmployeePasswordService, deleteEmployeeService,
+    getEmployeeListService, addKeepSalaryService
 }

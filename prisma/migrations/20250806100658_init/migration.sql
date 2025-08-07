@@ -9,7 +9,6 @@ CREATE TABLE "Account" (
     "roleId" INTEGER,
     "status" INTEGER,
     "salaryId" INTEGER,
-    "keepSalaryId" INTEGER,
     "salaryPlusId" INTEGER,
 
     CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
@@ -68,7 +67,7 @@ CREATE TABLE "Work" (
     "date" TEXT,
     "startTime" TEXT,
     "endTime" TEXT,
-    "salary" INTEGER,
+    "salary" TEXT,
     "isMopping" INTEGER,
     "accountId" INTEGER,
     "status" INTEGER,
@@ -101,9 +100,11 @@ CREATE TABLE "WorkError" (
 -- CreateTable
 CREATE TABLE "KeepSalary" (
     "id" SERIAL NOT NULL,
+    "workId" TEXT,
     "date" TEXT,
     "salary" TEXT,
     "status" INTEGER,
+    "accountId" INTEGER,
 
     CONSTRAINT "KeepSalary_pkey" PRIMARY KEY ("id")
 );
@@ -115,6 +116,17 @@ CREATE TABLE "SalaryPlus" (
     "plus" INTEGER,
 
     CONSTRAINT "SalaryPlus_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SummaryWork" (
+    "id" SERIAL NOT NULL,
+    "month" INTEGER NOT NULL,
+    "year" INTEGER NOT NULL,
+    "keepSalaryId" INTEGER,
+    "accountId" INTEGER,
+
+    CONSTRAINT "SummaryWork_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -157,13 +169,19 @@ CREATE INDEX "Work_status_idx" ON "Work"("status");
 CREATE INDEX "SalaryDeduction_workId_idx" ON "SalaryDeduction"("workId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "KeepSalary_accountId_key" ON "KeepSalary"("accountId");
+
+-- CreateIndex
 CREATE INDEX "KeepSalary_status_idx" ON "KeepSalary"("status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SalaryPlus_name_key" ON "SalaryPlus"("name");
 
--- AddForeignKey
-ALTER TABLE "Account" ADD CONSTRAINT "Account_keepSalaryId_fkey" FOREIGN KEY ("keepSalaryId") REFERENCES "KeepSalary"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "SummaryWork_keepSalaryId_key" ON "SummaryWork"("keepSalaryId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SummaryWork_month_year_accountId_key" ON "SummaryWork"("month", "year", "accountId");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -181,7 +199,7 @@ ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("r
 ALTER TABLE "Deduction" ADD CONSTRAINT "Deduction_deductionTypeId_fkey" FOREIGN KEY ("deductionTypeId") REFERENCES "DeductionType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Work" ADD CONSTRAINT "Work_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Work" ADD CONSTRAINT "Work_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_deductionId_fkey" FOREIGN KEY ("deductionId") REFERENCES "Deduction"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -190,4 +208,13 @@ ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_deductionId_fkey" 
 ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_deductionTypeId_fkey" FOREIGN KEY ("deductionTypeId") REFERENCES "DeductionType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SalaryDeduction" ADD CONSTRAINT "SalaryDeduction_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "KeepSalary" ADD CONSTRAINT "KeepSalary_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SummaryWork" ADD CONSTRAINT "SummaryWork_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SummaryWork" ADD CONSTRAINT "SummaryWork_keepSalaryId_fkey" FOREIGN KEY ("keepSalaryId") REFERENCES "KeepSalary"("id") ON DELETE SET NULL ON UPDATE CASCADE;

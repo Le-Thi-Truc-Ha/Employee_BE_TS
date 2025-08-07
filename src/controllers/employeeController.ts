@@ -92,22 +92,18 @@ const addWorkController = async (req: Request, res: Response): Promise<any> => {
 
 const getWorkListController = async (req: Request, res: Response): Promise<any> => {
     try {
-        let accountId: number = -1;
-        let roleId: number = -1;
-        if (req.user && typeof req.user !== "string") {
-            accountId = req.user?.id;
-            roleId = req.user?.roleId;
-        }
+        const accountId = typeof req.query.accountId === 'string' ? parseInt(req.query.accountId, 10) : -1;
         const month = typeof req.query.month === 'string' ? parseInt(req.query.month, 10) : -1;
         const year = typeof req.query.year === 'string' ? parseInt(req.query.year, 10) : -1;
-        if (month == -1 || year == -1) {
+        if (accountId == -1 || month == -1 || year == -1) {
             return res.status(200).json({
                 message: "Dữ liệu không hợp lệ",
                 data: false,
                 code: 1
             })
         }
-        const result = await employeeService.getWorkListService(accountId, roleId, month, year);
+
+        const result = await employeeService.getWorkListService(accountId, month, year);
         return res.status(200).json({
             message: result.message,
             data: result.data,
@@ -249,8 +245,8 @@ const findWorkController = async (req: Request, res: Response): Promise<any> => 
             })
         }
         if (findValue.includes("/")) {
-            const [day, month] = findValue.split("/").map((item) => (item.padStart(2, "0")));
-            findValue = `${day}/${month}`;
+            const newArray = findValue.split("/").filter((item) => (item != "")).map((item) => (item.padStart(2, "0")));
+            findValue = newArray.join("/");
         }
         const month = typeof req.query.month === 'string' ? parseInt(req.query.month, 10) : -1;
         const year = typeof req.query.year === 'string' ? parseInt(req.query.year, 10) : -1;
