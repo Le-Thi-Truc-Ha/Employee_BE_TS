@@ -489,7 +489,8 @@ const getEmployeeListService = async (): Promise<ReturnData> => {
             }, 
             select: {
                 id: true,
-                name: true
+                name: true,
+                gender: true
             }
         })
         return({
@@ -527,18 +528,6 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
                 code: 1
             })
         }
-        // let addKeepSalary: any; 
-        // if (!existEmployee[0].keepSalary) {
-        //     addKeepSalary = await prisma.keepSalary.create({
-        //         data: {
-        //             date: date,
-        //             salary: salary,
-        //             accountId: employeeId
-        //         }
-        //     })
-        // } else {
-
-        // }
         const idString = idSelect.join("=");
         const result = await prisma.$transaction(async (tx) => {
             let addKeepSalary: any;

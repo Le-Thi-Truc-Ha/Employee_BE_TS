@@ -4,6 +4,7 @@ import appService from "../services/appService";
 import jwt from "../middleware/jwt";
 
 const awakeBackendController = (req: Request, res: Response): any => {
+    console.log("Awake Backend");
     return res.status(200).send("Awake Success");
 }
 const loginController = async (req: Request, res: Response): Promise<any> => {
