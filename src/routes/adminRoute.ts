@@ -23,5 +23,16 @@ adminRoute.get("/get-work", employeeController.getWorkController);
 adminRoute.post("/update-work", employeeController.updateWorkController);
 adminRoute.post("/get-salary-deduction", employeeController.getSalaryDeductionController);
 adminRoute.post("/add-keep-salary", adminController.addKeepSalaryController);
+adminRoute.post("/update-salary-deduction", adminController.updateSalaryDeductionController);
+adminRoute.post("/add-miss-shift", adminController.addMissShiftController);
+adminRoute.post("/delete-salary-deduction", adminController.deleteSalaryDeductionController);
+adminRoute.post("/pay-keep-salary", adminController.payKeepSalaryController);
+adminRoute.post("/cancel-pay", adminController.cancelPayController);
+adminRoute.post("/delete-keep-salary", adminController.deleteKeepSalaryController);
+adminRoute.get("/get-step-salary", adminController.getStepSalaryController);
+adminRoute.post("/update-step-salary", adminController.updateStepSalaryController);
+adminRoute.post("/update-deduction", adminController.updateDeductionController);
+adminRoute.get("/get-work-error", adminController.getWorkErrorController);
+adminRoute.post("/delete-work-error", adminController.deleteWorkErrorController);
 
 export default adminRoute;

@@ -10,5 +10,6 @@ appRoute.get("/logout", appController.logoutController);
 appRoute.get("/get-profile", appController.getProfileController);
 appRoute.post("/change-profile", appController.changeProfileController);
 appRoute.post("/change-password", appController.changePasswordController);
+appRoute.get("/check-error-work", appController.checkErrorWorkController);
 
 export default appRoute;

@@ -13,6 +13,7 @@ export interface PayloadData {
 }
 
 export interface DeductionDescription {
+  id: number,
   deductionTypeId: number, 
   deductionId: number,
   quantity: string,

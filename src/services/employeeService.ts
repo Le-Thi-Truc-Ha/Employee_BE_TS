@@ -6,6 +6,20 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 dayjs.extend(customParseFormat);
 
+const calculateSalary = (salary: string, startTime: string, endTime: string): string => {
+    let result: string = "";
+    const salaryArray = salary.split("=");
+    const hour = Math.round((dayjs(endTime, "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 10) / 10;
+    if (salaryArray.length == 1) {
+        result = (parseInt(salaryArray[0]) * hour).toLocaleString("en-US").concat("đ");
+    } else {
+        const hourWeekday = Math.round((dayjs(endTime, "HH:mm").diff(dayjs("12:00", "HH:mm"), "hour", true)) * 10) / 10;
+        const hourWeekend = Math.round((dayjs("12:00", "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 10) / 10;
+        result = (parseInt(salaryArray[0]) * hourWeekday + parseInt(salaryArray[1]) * hourWeekend).toLocaleString("en-US").concat("đ");
+    }
+    return result;
+}
+
 const getDeductionService = async (): Promise<ReturnData> => {
     try {
         const deductionList = await prisma.deductionType.findMany({
@@ -165,22 +179,22 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
                 }
             })
         )
-        const [day, month, year] = date.split("/").map((item) => (parseInt(item)));
-        const checkSummary = await prisma.summaryWork.upsert({
-            where: {
-                keySummaryWork: {
-                    month: month,
-                    year: year,
-                    accountId: accountId
-                }
-            },
-            update: {},
-            create: {
-                month: month,
-                year: year,
-                accountId: accountId
-            }
-        })
+        // const [day, month, year] = date.split("/").map((item) => (parseInt(item)));
+        // const checkSummary = await prisma.summaryWork.upsert({
+        //     where: {
+        //         keySummaryWork: {
+        //             month: month,
+        //             year: year,
+        //             accountId: accountId
+        //         }
+        //     },
+        //     update: {},
+        //     create: {
+        //         month: month,
+        //         year: year,
+        //         accountId: accountId
+        //     }
+        // })
         const result = await prisma.$transaction(async (tx) => {
             const addWork = await tx.work.create({
                 data: {
@@ -239,12 +253,10 @@ const getWorkListService = async (accountId: number, month: number, year: number
                     }
                 },
                 keepSalary: {
-                    where: {
-                        status: 0
-                    },
                     select: {
                         id: true,
-                        salary: true
+                        salary: true,
+                        status: true
                     }
                 }
             }
@@ -256,7 +268,11 @@ const getWorkListService = async (accountId: number, month: number, year: number
                 code: 1
             })
         }
-        let isPayKeepSalary: boolean = false;
+        let isPay: boolean = false;
+        if (existAccount.keepSalary?.status == 1) {
+            isPay = true;
+        }
+        let canAction: boolean = false;
         const summaryWork = await prisma.summaryWork.findMany({
             where: {
                 AND: [
@@ -266,22 +282,22 @@ const getWorkListService = async (accountId: number, month: number, year: number
                 ]
             },
             select: {
-                keepSalaryId: true,
-                month: true,
-                year: true
+                keepSalaryId: true
             }
         });
         if (summaryWork.length == 1) {
-            if (summaryWork[0].keepSalaryId != null && summaryWork[0].month == month + 1 && summaryWork[0].year == year) {
-                isPayKeepSalary = true;
-            }
+            canAction = true;
+        } else {
+            canAction = false;
         }
+        
         return({
             message: "Lấy thông tin thành công",
             data: {
                 works: existAccount.works,
                 keepSalary: existAccount.keepSalary,
-                isPayKeepSalary: isPayKeepSalary
+                isPay: isPay,
+                canAction: canAction
             },
             code: 0
         })
@@ -297,6 +313,62 @@ const getWorkListService = async (accountId: number, month: number, year: number
 
 const deleteWorkService = async (workId: number, accountId: number): Promise<ReturnData> => {
     try {
+        const existWork = await prisma.work.findFirst({
+            where: {
+                AND: [
+                    {id: workId},
+                    {accountId: accountId}
+                ]
+            },
+            select: {
+                status: true
+            }
+        });
+
+        if (!existWork) {
+            return({
+                message: "Không tìm thấy ca làm",
+                data: false,
+                code: 1
+            })
+        }
+
+        if (existWork.status == 2) {
+            return({
+                message: "Không thể xóa ca làm này",
+                data: false,
+                code: 1
+            })
+        }
+
+        let keepSalaryId: number = -1;
+        let newKeepSalary: {workId: string, date: string, salary: string} = {workId: "", date: "", salary: ""};
+        let isDeleteKeepSalary: boolean = false;
+        if (existWork.status == 2) {
+            const existAccount = await prisma.account.findUnique({
+                where: {id: accountId},
+                select: {
+                    keepSalary: true
+                }
+            })
+            keepSalaryId = existAccount?.keepSalary?.id ?? -1;
+            const workIdArray: number[] = existAccount?.keepSalary?.workId?.split("=").map((item) => (parseInt(item))) ?? [];
+            if (workIdArray.length == 1) {
+                isDeleteKeepSalary = true;
+            } else {
+                const dateArray: string[] = existAccount?.keepSalary?.date?.split("=") ?? [];
+                const salaryArray: number[] = existAccount?.keepSalary?.salary?.split("=").map((item) => (parseInt(item))) ?? [];
+                const index: number = workIdArray.indexOf(workId);
+                workIdArray.splice(index, 1);
+                dateArray.splice(index, 1);
+                salaryArray.splice(index, 1);
+                const newWorkId: string = workIdArray.join("=");
+                const newDate: string = dateArray.join("=");
+                const newSalary: string = salaryArray.join("=");
+                newKeepSalary = {workId: newWorkId, date: newDate, salary: newSalary};
+            }
+        }
+
         const deleteWorkTransaction = await prisma.$transaction(async (tx) => {
             const deleteSalaryDeduction = await tx.salaryDeduction.deleteMany({
                 where: {
@@ -315,6 +387,23 @@ const deleteWorkService = async (workId: number, accountId: number): Promise<Ret
 
             if (deleteWork.count == 0) {
                 throw new Error("Không tìm thấy ca làm");
+            }
+
+            if (existWork.status == 2) {
+                if (isDeleteKeepSalary) {
+                    const deleteKeepSalary = await tx.keepSalary.delete({
+                        where: {id: keepSalaryId}
+                    })
+                } else {
+                    const updateKeepSalary = await tx.keepSalary.update({
+                        where: {id: keepSalaryId},
+                        data: {
+                            workId: newKeepSalary.workId,
+                            date: newKeepSalary.date,
+                            salary: newKeepSalary.salary
+                        }
+                    })
+                }
             }
             return deleteWork
         })
@@ -356,13 +445,14 @@ const getWorkService = async (workId: number): Promise<ReturnData> => {
                     date: true,
                     startTime: true,
                     endTime: true,
-                    isMopping: true
+                    isMopping: true,
                 }
             });
 
-            const salaryDeduction = await prisma.salaryDeduction.findMany({
+            const salaryDeduction = await tx.salaryDeduction.findMany({
                 where: {workId: workId},
                 select: {
+                    id: true,
                     deductionTypeId: true,
                     deductionId: true,
                     quantity: true,
@@ -374,7 +464,7 @@ const getWorkService = async (workId: number): Promise<ReturnData> => {
                 startTime: workInformation?.startTime,
                 endTime: workInformation?.endTime,
                 isMopping: workInformation?.isMopping,
-                salaryDeductions: salaryDeduction
+                salaryDeductions: salaryDeduction,
             }
         })
         if (!workInformationTransaction.date) {
@@ -399,7 +489,7 @@ const getWorkService = async (workId: number): Promise<ReturnData> => {
     }
 }
 
-const updateWorkService = async (workId: number, date: string, startTime: string, endTime: string, isMopping: number, accountId: number, deductionDescription: DeductionDescription[]): Promise<ReturnData> => {
+const updateWorkService = async (workId: number, date: string, startTime: string, endTime: string, isMopping: number, accountId: number, deductionDescription: DeductionDescription[], deductionDelete: number[], salary: string): Promise<ReturnData> => {
     try {
         dayjs.extend(customParseFormat);
         const existWork = await prisma.work.findMany({
@@ -410,12 +500,20 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                 ]
             },
             select: {
-                date: true
+                date: true,
+                status: true
             }
         })
-        if (!existWork) {
+        if (existWork.length == 0) {
             return({
                 message: "Không tìm thấy ca làm",
+                data: false,
+                code: 1
+            })
+        }
+        if (existWork[0].status == 2) {
+            return({
+                message: "Không thể sửa ca làm",
                 data: false,
                 code: 1
             })
@@ -435,7 +533,8 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                     select: {
                         plus: true
                     }
-                }
+                },
+                keepSalary: true
             }
         });
         if (!existAccount) {
@@ -445,27 +544,32 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                 code: 1
             });
         }
-        let weekdaySalary: number = existAccount.salary?.weekday || 0;
-        let weekendSalary: number = existAccount.salary?.weekend || 0;
-        if (existAccount.salaryPlus?.plus) {
-            weekdaySalary += existAccount.salaryPlus?.plus;
-            weekendSalary += existAccount.salaryPlus?.plus;
-        }
-        let salary: string = "";
-        if (dayjs(date, "DD/MM/YYYY").day() == 0) {
-            const start = dayjs(startTime, "HH:mm");
-            const end = dayjs(endTime, "HH:mm");
-            const inWeekday = start.isBefore(dayjs("22:30", "HH:mm")) && end.isAfter(dayjs("12:00", "HH:mm"));
-            const inWeekend = start.isBefore(dayjs("12:00", "HH:mm")) && end.isAfter(dayjs("06:30", "HH:mm"));
-            if (inWeekday && inWeekend) {
-                salary = weekdaySalary.toString().concat("=").concat(weekendSalary.toString());
-            } else if (inWeekday) {
-                salary = weekdaySalary.toString();
-            } else if (inWeekend) {
-                salary = weekendSalary.toString();
+        let salaryAvailable: string = "";
+        if (salary == "") {
+            let weekdaySalary: number = existAccount.salary?.weekday || 0;
+            let weekendSalary: number = existAccount.salary?.weekend || 0;
+            if (existAccount.salaryPlus?.plus) {
+                weekdaySalary += existAccount.salaryPlus?.plus;
+                weekendSalary += existAccount.salaryPlus?.plus;
+            }
+            
+            if (dayjs(date, "DD/MM/YYYY").day() == 0) {
+                const start = dayjs(startTime, "HH:mm");
+                const end = dayjs(endTime, "HH:mm");
+                const inWeekday = start.isBefore(dayjs("22:30", "HH:mm")) && end.isAfter(dayjs("12:00", "HH:mm"));
+                const inWeekend = start.isBefore(dayjs("12:00", "HH:mm")) && end.isAfter(dayjs("06:30", "HH:mm"));
+                if (inWeekday && inWeekend) {
+                    salaryAvailable = weekdaySalary.toString().concat("=").concat(weekendSalary.toString());
+                } else if (inWeekday) {
+                    salaryAvailable = weekdaySalary.toString();
+                } else if (inWeekend) {
+                    salaryAvailable = weekendSalary.toString();
+                }
+            } else {
+                salaryAvailable = weekdaySalary.toString();
             }
         } else {
-            salary = weekdaySalary.toString();
+            salaryAvailable = salary;
         }
         const nameLate: string[] = ["Trễ dưới 10 phút", "Trễ dưới 30 phút", "Trễ dưới 60 phút"]; 
         const costLate = await prisma.deductionType.findMany({
@@ -539,6 +643,21 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                 }
             })
         )
+        let newSalary: number = 0;
+        let newKeepSalary: string = "";
+        if (existWork[0].status == 2) {
+            newSalary = parseInt((calculateSalary(salary, startTime, endTime).slice(0, -1).split(",")).join(""));
+            const workIdArray = existAccount.keepSalary?.workId?.split("=").map((item) => (parseInt(item))) ?? [];
+            const keepSalaryArray = existAccount.keepSalary?.salary?.split("=").map((item) => (parseInt(item))) ?? [];
+            if (workIdArray.length != 0) {
+                for (let i = 0; i < workIdArray.length; i++) {
+                    if (workIdArray[i] == workId) {
+                        keepSalaryArray[i] = newSalary;
+                    }
+                }
+                newKeepSalary = keepSalaryArray.join("=");
+            }
+        }
         const result = await prisma.$transaction(async (tx) => {
             const updateWork = await tx.work.update({
                 where: {id: workId},
@@ -546,27 +665,52 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                     date: date,
                     startTime: startTime,
                     endTime: endTime,
-                    salary: salary,
+                    salary: salaryAvailable,
                     isMopping: isMopping,
                     accountId: accountId,
-                    status: 1
                 }
             })
-
-            const deleteSalaryDeduction = await tx.salaryDeduction.deleteMany({
-                where: {workId: workId}
-            })
-
-            const addSalaryDeduction = await tx.salaryDeduction.createMany({
-                data: deductionDescription.map((item, index) => ({
-                    workId: workId,
-                    deductionTypeId: item.deductionTypeId,
-                    deductionId: item.deductionId == 0 ? null : item.deductionId,
-                    quantity: item.quantity,
-                    detail: item.detail,
-                    cost: priceDeductions[index]
-                }))
-            })
+            const updateSalaryDeduction = await Promise.all(deductionDescription.map(async (item, index) => {
+                return await tx.salaryDeduction.upsert({
+                    where: {
+                        id: item.id
+                    },
+                    update: {
+                        deductionTypeId: item.deductionTypeId,
+                        deductionId: item.deductionId == 0 ? null : item.deductionId,
+                        quantity: item.quantity,
+                        detail: item.detail,
+                        cost: priceDeductions[index]
+                    },
+                    create: {
+                        workId: workId,
+                        deductionTypeId: item.deductionTypeId,
+                        deductionId: item.deductionId == 0 ? null : item.deductionId,
+                        quantity: item.quantity,
+                        detail: item.detail,
+                        cost: priceDeductions[index]
+                    }
+                })
+            }))
+            if (deductionDelete.length > 0) {
+                const deleteSalaryDeduction = await prisma.salaryDeduction.deleteMany({
+                    where: {
+                        id: {
+                            in: deductionDelete
+                        }
+                    }
+                })
+            }
+            if (newKeepSalary != "") {
+                const updateKeepSalary = await tx.keepSalary.update({
+                    where: {
+                        id: existAccount.keepSalary?.id
+                    },
+                    data: {
+                        salary: newKeepSalary
+                    }
+                })
+            }
             return updateWork;
         });
 
@@ -649,7 +793,7 @@ const findWorkService = async (findValue: string, accountId: number, month: numb
     }
 }
 
-const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnData> => {
+const getSalaryDeductionService = async (workIdList: number[], date: string): Promise<ReturnData> => {
     try {
         const result = await Promise.all(
             workIdList.map(async (item) => {
@@ -672,7 +816,7 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
                 code: 1
             })
         }
-        const salaryDeductions: DataSalaryDeduction[] = [];
+        let salaryDeductions: DataSalaryDeduction[] = [];
         result.map((itemParent) => {
             itemParent.map((itemChild) => {
                 const id = itemChild.id;
@@ -683,11 +827,19 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
                 if (itemChild.deductionTypeId == 1) {
                     detail = itemChild.quantity || "";
                     quantity = "1";
-                    cost = "-";
+                    if (itemChild.cost == 0) {
+                        cost = "-";
+                    } else {
+                        cost = itemChild.cost ? `${itemChild.cost.toLocaleString("en-US")}đ` : "";
+                    }
                 } else {
                     if (itemChild.deductionId == null) {
+                        if (itemChild.deductionTypeId == 2 || itemChild.deductionTypeId == 7) {
+                            quantity = "1"
+                        } else {
+                            quantity = itemChild.quantity || "";
+                        }
                         detail = itemChild.detail || "";
-                        quantity = itemChild.quantity || "";
                         cost = itemChild.cost ? `${itemChild.cost.toLocaleString("en-US")}đ` : "";
                     }
                     if (itemChild.deductionTypeId == 20 && itemChild.deductionId != null) {
@@ -704,6 +856,26 @@ const getSalaryDeductionService = async (workIdList: number[]): Promise<ReturnDa
                 salaryDeductions.push({id: id, date: date, detail: detail, quantity: quantity, cost: cost})
             })
         })
+        const findMissShift = await prisma.salaryDeduction.findMany({
+            where: {
+                quantity: {
+                    contains: date
+                }
+            }
+        })
+        if (findMissShift.length != 0) {
+            const missShift: DataSalaryDeduction[] = findMissShift.map((item) => (
+                {
+                    id: item.id,
+                    date: item.quantity ?? "",
+                    detail: item.detail ?? "",
+                    quantity: "1",
+                    cost: `${item.cost?.toLocaleString("en-US")}đ`
+                }
+            ))
+            salaryDeductions = [...salaryDeductions, ...missShift];
+        }
+
         return({
             message: "Lấy dữ liệu thành công",
             data: salaryDeductions,

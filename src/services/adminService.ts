@@ -533,7 +533,7 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
             let addKeepSalary: any;
             let oldWorkId: number[] | undefined;
             if (!existEmployee[0].keepSalary) {
-                addKeepSalary = await prisma.keepSalary.create({
+                addKeepSalary = await tx.keepSalary.create({
                     data: {
                         workId: idString,
                         date: date,
@@ -545,7 +545,7 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
             } else {
                 const keepSalaryId = existEmployee[0].keepSalary.id;
                 oldWorkId = existEmployee[0].keepSalary.workId?.split("=").map((item) => (parseInt(item)));
-                addKeepSalary = await prisma.keepSalary.update({
+                addKeepSalary = await tx.keepSalary.update({
                     where: {id: keepSalaryId},
                     data: {
                         workId: idString,
@@ -554,7 +554,7 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
                     }
                 })
             }
-            const updateOldWorkStatus = await prisma.work.updateMany({
+            const updateOldWorkStatus = await tx.work.updateMany({
                 where: {
                     id: {
                         in: oldWorkId
@@ -564,7 +564,7 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
                     status: 1
                 }
             })
-            const updateNewWorkStatus = await prisma.work.updateMany({
+            const updateNewWorkStatus = await tx.work.updateMany({
                 where: {
                     id: {
                         in: idSelect
@@ -591,9 +591,474 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
     }
 }
 
+const updateSalaryDeductionService = async (newSalaryDeduction: {id: number, cost: number}[]): Promise<ReturnData> => {
+    try {
+        const result = await Promise.all(newSalaryDeduction.map(async (item) => {
+            return await prisma.salaryDeduction.update({
+                where: {id: item.id},
+                data: {
+                    cost: item.cost
+                }
+            })
+        }))
+        if (result.length == 0) {
+            return({
+                message: "Cập nhật thất bại",
+                data: false,
+                code: 1
+            })
+        }
+        const idUpdate = result.map((item) => (item.id))
+        return({
+            message: "Cập nhật thành công",
+            data: idUpdate,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const addMissShiftService = async (date: string): Promise<ReturnData> => {
+    try {
+        const missShiftId = await prisma.deductionType.findUnique({
+            where: {
+                name: "Bỏ ca"
+            },
+            select: {
+                id: true,
+                name: true,
+                price: true
+            }
+        })
+        if (!missShiftId) {
+            return({
+                message: "Không tìm thấy dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const addMissShift = await prisma.salaryDeduction.create({
+            data: {
+                deductionTypeId: missShiftId.id,
+                quantity: date,
+                detail: missShiftId.name,
+                cost: missShiftId.price
+            }
+        })
+        if (!addMissShift) {
+            return({
+                message: "Xác nhận thất bại",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Xác nhận thành công",
+            data: addMissShift,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteSalaryDeductionService = async (salaryDeductionId: number[]): Promise<ReturnData> => {
+    try {
+        const result = await prisma.salaryDeduction.deleteMany({
+            where: {
+                id: {
+                    in: salaryDeductionId
+                }
+            }
+        });
+        return({
+            message: "Xóa thành công",
+            data: result,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const payKeepSalaryService = async (employeeId: number, month: number, year: number): Promise<ReturnData> => {
+    try {
+        const existKeepSalary = await prisma.keepSalary.findFirst({
+            where: {
+                AND: [
+                    {accountId: employeeId},
+                    {status: 0}
+                ]
+            },
+            select: {
+                id: true
+            }
+        })
+        if (!existKeepSalary) {
+            return({
+                message: "Không tìm thấy dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result = await prisma.$transaction(async (tx) => {
+            const updateKeepSalary = await tx.keepSalary.update({
+                where: {id: existKeepSalary.id},
+                data: {
+                    status: 1
+                }
+            });
+            const createSummary = await tx.summaryWork.create({
+                data: {
+                    accountId: employeeId,
+                    month: month + 1,
+                    year: year,
+                    keepSalaryId: existKeepSalary.id
+                }
+            })
+            return createSummary;
+        })
+        return({
+            message: "Thành công",
+            data: result,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const cancelPayService = async (employeeId: number, month: number, year: number): Promise<ReturnData> => {
+    try {
+        const existKeepSalary = await prisma.keepSalary.findFirst({
+            where: {
+                AND: [
+                    {accountId: employeeId},
+                    {status: 1}
+                ]
+            },
+            select: {
+                id: true
+            }
+        })
+        if (!existKeepSalary) {
+            return({
+                message: "Không tìm thấy dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result = await prisma.$transaction(async (tx) => {
+            const updateKeepSalary = await tx.keepSalary.update({
+                where: {id: existKeepSalary.id},
+                data: {
+                    status: 0
+                }
+            });
+            const deleteSummary = await tx.summaryWork.delete({
+                where: {
+                    keySummaryWork: {month: month + 1, year: year, accountId: employeeId}
+                }
+            })
+            return deleteSummary;
+        })
+        return({
+            message: "Thành công",
+            data: result,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteKeepSalaryService = async (employeeId: number): Promise<ReturnData> => {
+    try {
+        const existKeepSalary = await prisma.keepSalary.findFirst({
+            where: {
+                accountId: employeeId
+            },
+            select: {
+                id: true,
+                workId: true,
+                status: true
+            }
+        })
+        if (!existKeepSalary) {
+            return({
+                message: "Không tìm thấy dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        if (existKeepSalary.status == 1) {
+            return({
+                message: "Không thể xóa lương đã trả",
+                data: false,
+                code: 1
+            })
+        }
+        const workIdArray = existKeepSalary.workId?.split("=").map((item) => (parseInt(item))) ?? [];
+        const result = await prisma.$transaction(async (tx) => {
+            const deleteKeepSalary = await tx.keepSalary.delete({
+                where: {id: existKeepSalary.id}
+            })
+            await Promise.all(workIdArray?.map(async (item) => {
+                return await tx.work.update({
+                    where: {id: item},
+                    data: {
+                        status: 1
+                    }
+                })
+            }))
+        })
+        return({
+            message: "Xóa thành công",
+            data: workIdArray,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const getStepSalaryService = async (): Promise<ReturnData> => {
+    try {
+        const stepSalary = await prisma.salary.findMany();
+        if (stepSalary.length == 0) {
+            return({
+                message: "Không tìm thấy dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const deductionParent = await prisma.deductionType.findMany({
+            where: {
+                price: {
+                    not: 0
+                }
+            },
+            select: {
+                id: true,
+                name: true, 
+                price: true
+            }
+        })
+        const deductionChild = await prisma.deduction.findMany({
+            select: {
+                id: true,
+                name: true,
+                price: true
+            }
+        })
+        const deduction: {id: number, typeId: number, name: string, price: number}[] = [
+            ...deductionParent.map((item) => (
+                {id: item.id, typeId: 1, name: item.name, price: item?.price ?? -1}
+            )),
+            ...deductionChild.map((item) => (
+                {id: item.id, typeId: 2, name: item.name, price: item?.price ?? -1}
+            ))
+        ]
+        return({
+            message: "Lấy dữ liệu thành công",
+            data: {
+                salary: stepSalary,
+                deduction: deduction
+            },
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const updateStepSalaryService = async (newValue: {id: number, name: string, weekday: string, weekend: string}): Promise<ReturnData> => {
+    try {
+        const weekday: number = parseInt(newValue.weekday.substring(0, newValue.weekday.length - 1).replace(/,/g, ""));
+        const weekend: number = parseInt(newValue.weekend.substring(0, newValue.weekend.length - 1).replace(/,/g, ""));
+        const updateStepSalary = await prisma.salary.update({
+            where: {id: newValue.id},
+            data: {
+                weekday: weekday,
+                weekend: weekend
+            }
+        })
+        if (!updateStepSalary) {
+            return({
+                message: "Cập nhật thất bại",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Cập nhật thành công",
+            data: true,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const updateDeductionService = async (newValue: {key: string, stt: string, id: number, typeId: number, name: string, price: string}[]): Promise<ReturnData> => {
+    try {
+        for (let i = 0; i < newValue.length; i++) {
+            if (Number.isNaN(parseInt(newValue[i].price.substring(0, newValue[i].price.length - 1).replace(/,/g, "")))) {
+                return({
+                    message: "Dữ liệu không hợp lệ",
+                    data: false,
+                    code: 1
+                })
+            }
+        }
+        const result = await Promise.all(newValue.map(async (item) => {
+            if (item.typeId == 1) {
+                return await prisma.deductionType.update({
+                    where: {
+                        id: item.id
+                    },
+                    data: {
+                        price: parseInt(item.price.substring(0, item.price.length - 1).replace(/,/g, ""))
+                    }
+                })
+            } else {
+                return await prisma.deduction.update({
+                    where: {
+                        id: item.id
+                    },
+                    data: {
+                        price: parseInt(item.price.substring(0, item.price.length - 1).replace(/,/g, ""))
+                    }
+                })
+            }
+        }))
+        for (let i = 0; i < result.length; i++) {
+            if (!result[i]) {
+                return({
+                    message: "Cập nhật thất bại",
+                    data: false,
+                    code: 1
+                })
+            }
+        }
+        return({
+            message: "Cập nhật thành công",
+            data: true,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const getWorkErrorService = async (): Promise<ReturnData> => {
+    try {
+        const workError = await prisma.workError.findMany();
+        if (workError.length == 0) {
+            return({
+                message: "Không có dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Lấy dữ liệu thành công",
+            data: workError,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteWorkErrorService = async (deleteId: number[]): Promise<ReturnData> => {
+    try {
+        const result = await prisma.workError.deleteMany({
+            where: {
+                id: {
+                    in: deleteId
+                }
+            }
+        })
+        if (deleteId.length > 0 && result.count == 0) {
+            return({
+                message: "Xóa thất bại",
+                data: false,
+                code: 1
+            })
+        }
+        return({
+            message: "Xóa thành công",
+            data: true,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
 export default {
     addAccountService, getAccountListService, findAccountService,
     getAccountInformationService, updateEmployeeAccountService,
     resetEmployeePasswordService, deleteEmployeeService,
-    getEmployeeListService, addKeepSalaryService
+    getEmployeeListService, addKeepSalaryService, updateSalaryDeductionService,
+    addMissShiftService, deleteSalaryDeductionService, payKeepSalaryService,
+    cancelPayService, deleteKeepSalaryService, getStepSalaryService, updateStepSalaryService,
+    updateDeductionService, getWorkErrorService, deleteWorkErrorService
 }

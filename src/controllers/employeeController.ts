@@ -24,8 +24,8 @@ const getDeductionController = async (req: Request, res: Response): Promise<any>
 const addWorkController = async (req: Request, res: Response): Promise<any> => {
     try {
         dayjs.extend(customParseFormat);
-        const {date, startTime, endTime, isMopping, deductionDescription} = req.body;
-        if (!date || !startTime || !endTime || isMopping == undefined || isMopping == null) {
+        const {accountId, date, startTime, endTime, isMopping, deductionDescription} = req.body;
+        if (!accountId || !date || !startTime || !endTime || isMopping == undefined || isMopping == null) {
             return res.status(200).json({
                 message: "Nhập đầy đủ thông tin trong form",
                 data: false, 
@@ -59,10 +59,8 @@ const addWorkController = async (req: Request, res: Response): Promise<any> => {
                 code: 1
             })
         }
-        let accountId: number = -1;
         let roleId: number = -1;
         if (req.user && typeof req.user !== "string") {
-            accountId = req.user?.id;
             roleId = req.user?.roleId;
         }
         if (roleId != 1) {
@@ -122,17 +120,16 @@ const getWorkListController = async (req: Request, res: Response): Promise<any> 
 const deleteWorkController = async (req: Request, res: Response): Promise<any> => {
     try {
         const workId = typeof req.query.workId == "string" ? parseInt(req.query.workId, 10) : -1;
-        if (workId == -1) {
+        const accountId = typeof req.query.accountId == "string" ? parseInt(req.query.accountId, 10) : -1;
+        
+        if (workId == -1 || accountId == -1) {
             return res.status(200).json({
                 message: "Không tìm thấy ca làm",
                 data: false,
                 code: 1
             })
         }
-        let accountId: number = -1;
-        if (req.user && typeof req.user !== "string") {
-            accountId = req.user?.id;
-        }
+
         const result: ReturnData = await employeeService.deleteWorkService(workId, accountId);
         return res.status(200).json({
             message: result.message,
@@ -178,8 +175,8 @@ const getWorkController = async (req: Request, res: Response): Promise<any> => {
 const updateWorkController = async (req: Request, res: Response): Promise<any> => {
     try {
         dayjs.extend(customParseFormat);
-        const {workId, date, startTime, endTime, isMopping, deductionDescription} = req.body;
-        if (!workId || !date || !startTime || !endTime || isMopping == undefined || isMopping == null) {
+        const {accountId, workId, date, startTime, endTime, isMopping, deductionDescription, deductionDelete, salary} = req.body;
+        if (!accountId || !workId || !date || !startTime || !endTime || !deductionDescription || !deductionDelete || isMopping == undefined) {
             return res.status(200).json({
                 message: "Nhập đầy đủ thông tin trong form",
                 data: false, 
@@ -213,12 +210,8 @@ const updateWorkController = async (req: Request, res: Response): Promise<any> =
                 code: 1
             })
         }
-        let accountId: number = -1;
-        if (req.user && typeof req.user !== "string") {
-            accountId = req.user?.id;
-        }
         
-        const result = await employeeService.updateWorkService(workId, date, startTime, endTime, isMopping, accountId, deductionDescription);
+        const result = await employeeService.updateWorkService(workId, date, startTime, endTime, isMopping, accountId, deductionDescription, deductionDelete, salary);
         return res.status(200).json({
             message: result.message,
             data: result.data,
@@ -279,15 +272,16 @@ const findWorkController = async (req: Request, res: Response): Promise<any> => 
 
 const getSalaryDeductionController = async (req: Request, res: Response): Promise<any> => {
     try {
-        const {workIdList} = req.body;
-        if (!workIdList) {
+        const {workIdList, month, year} = req.body;
+        if (!workIdList || !month || !year) {
             return res.status(200).json({
                 message: "Không có dữ liệu ca làm",
                 data: false,
                 code: 1
             })
         }
-        const result = await employeeService.getSalaryDeductionService(workIdList);
+        const date = `/${parseInt(month + 1).toString().padStart(2, "0")}/${year}`
+        const result = await employeeService.getSalaryDeductionService(workIdList, date);
         return res.status(200).json({
             message: result.message,
             data: result.data,

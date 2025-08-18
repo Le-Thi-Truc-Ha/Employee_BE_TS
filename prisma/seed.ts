@@ -58,7 +58,11 @@ const urlPermission = [
     "/admin/update-employee-account", "/admin/reset-employee-password", "/admin/delete-employee",
     "/admin/get-employee-list", "/admin/get-deduction", "/admin/add-work",
     "/admin/get-work-list", "/admin/delete-work", "/admin/get-work",
-    "/admin/update-work", "/admin/get-salary-deduction", "/admin/add-keep-salary"
+    "/admin/update-work", "/admin/get-salary-deduction", "/admin/add-keep-salary",
+    "/admin/update-salary-deduction", "/admin/add-miss-shift", "/admin/delete-salary-deduction",
+    "/admin/pay-keep-salary", "/admin/cancel-pay", "/admin/delete-keep-salary",
+    "/admin/get-step-salary", "/admin/update-step-salary", "/admin/get-work-error",
+    "/admin/delete-work-error"
 ]
 const rolePermission = [
     1, 1, 2, 
@@ -68,7 +72,11 @@ const rolePermission = [
     1, 1, 1,
     1, 1, 1,
     1, 1, 1,
-    1, 1, 1
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1,
+    1, 1, 1,
+    1
 ]
 
 const seed = async (): Promise<void> => {

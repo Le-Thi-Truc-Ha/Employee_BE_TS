@@ -245,7 +245,26 @@ const changePasswordController = async (req: Request, res: Response): Promise<an
     }
 }
 
+const checkErrorWorkController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const result: ReturnData = await appService.checkErrorWorkService();
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+} 
+
 export default {
     awakeBackendController, loginController, reloadPageController, logoutController, 
-    getProfileController, changeProfileController, changePasswordController
+    getProfileController, changeProfileController, changePasswordController,
+    checkErrorWorkController
 }

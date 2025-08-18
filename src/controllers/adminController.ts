@@ -227,7 +227,6 @@ const getEmployeeListController = async (req: Request, res: Response): Promise<a
 const addKeepSalaryController = async (req: Request, res: Response): Promise<any> => {
     try {
         const {idSelect, date, salary, employeeId} = req.body;
-        console.log(date, " ", salary, " ", employeeId)
         if (!idSelect || date == "" || salary == "" || !employeeId) {
             return res.status(200).json({
                 message: "Không đủ thông tin", 
@@ -251,9 +250,282 @@ const addKeepSalaryController = async (req: Request, res: Response): Promise<any
     }
 }
 
+const updateSalaryDeductionController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {newSalaryDeduction} = req.body;
+        if (!newSalaryDeduction) {
+            return res.status(200).json({
+                message: "Không có dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.updateSalaryDeductionService(newSalaryDeduction);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const addMissShiftController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {date} = req.body;
+        if (!date) {
+            return res.status(200).json({
+                message: "Nhập đầy đủ thông tin",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.addMissShiftService(date);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteSalaryDeductionController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {salaryDeductionId} = req.body;
+        if (!salaryDeductionId) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.deleteSalaryDeductionService(salaryDeductionId);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const payKeepSalaryController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {employeeId, month, year} = req.body;
+        if (!employeeId || !month || !year) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.payKeepSalaryService(employeeId, month, year);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const cancelPayController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {employeeId, month, year} = req.body;
+        if (!employeeId || !month || !year) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.cancelPayService(employeeId, month, year);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteKeepSalaryController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {employeeId} = req.body;
+        if (!employeeId) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.deleteKeepSalaryService(employeeId);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const getStepSalaryController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const result: ReturnData = await adminService.getStepSalaryService();
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const updateStepSalaryController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {newValue} = req.body;
+        if (!newValue) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.updateStepSalaryService(newValue);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const updateDeductionController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {newValue} = req.body;
+        if (!newValue) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.updateDeductionService(newValue);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const getWorkErrorController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const result: ReturnData = await adminService.getWorkErrorService();
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
+const deleteWorkErrorController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {deleteId} = req.body;
+        if (!deleteId) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.deleteWorkErrorService(deleteId);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
 export default {
     addAccountController, getAccountListController, findAccountController,
     getAccountInformationController, updateEmployeeAccountController,
     resetEmployeePasswordController, deleteEmployeeController, getEmployeeListController,
-    addKeepSalaryController
+    addKeepSalaryController, updateSalaryDeductionController, addMissShiftController,
+    deleteSalaryDeductionController, payKeepSalaryController, cancelPayController,
+    deleteKeepSalaryController, getStepSalaryController, updateStepSalaryController,
+    updateDeductionController, getWorkErrorController, deleteWorkErrorController
 }
