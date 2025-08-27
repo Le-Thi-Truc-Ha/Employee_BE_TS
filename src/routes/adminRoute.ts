@@ -34,5 +34,6 @@ adminRoute.post("/update-step-salary", adminController.updateStepSalaryControlle
 adminRoute.post("/update-deduction", adminController.updateDeductionController);
 adminRoute.get("/get-work-error", adminController.getWorkErrorController);
 adminRoute.post("/delete-work-error", adminController.deleteWorkErrorController);
+adminRoute.post("/find-work", adminController.findWorkController);
 
 export default adminRoute;

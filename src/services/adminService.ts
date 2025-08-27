@@ -197,7 +197,9 @@ const getSummaryWork = async (accountId: number, year: string): Promise<ReturnDa
         const workSummary = await prisma.work.findMany({
             where: {
                 AND: [
-                    {status: 1},
+                    {status: {
+                        in: [1, 2]
+                    }},
                     {accountId: accountId},
                     {date: {
                         contains: year
@@ -1053,6 +1055,43 @@ const deleteWorkErrorService = async (deleteId: number[]): Promise<ReturnData> =
     }
 }
 
+const findWorkService = async (date: string): Promise<ReturnData> => {
+    try {
+        const work = await prisma.work.findMany({
+            where: {
+                AND: [
+                    {date: date},
+                    {status: {
+                        in: [1, 2]
+                    }}
+                ]
+            }, 
+            select: {
+                id: true,
+                startTime: true,
+                endTime: true,
+                account: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        })
+        return({
+            message: "Tìm thành công",
+            data: work,
+            code: 0
+        })
+    } catch(e) {
+        console.log(e);
+        return({
+            message: "Xảy ra lỗi ở service",
+            data: false,
+            code: -1
+        })
+    }
+}
+
 export default {
     addAccountService, getAccountListService, findAccountService,
     getAccountInformationService, updateEmployeeAccountService,
@@ -1060,5 +1099,5 @@ export default {
     getEmployeeListService, addKeepSalaryService, updateSalaryDeductionService,
     addMissShiftService, deleteSalaryDeductionService, payKeepSalaryService,
     cancelPayService, deleteKeepSalaryService, getStepSalaryService, updateStepSalaryService,
-    updateDeductionService, getWorkErrorService, deleteWorkErrorService
+    updateDeductionService, getWorkErrorService, deleteWorkErrorService, findWorkService
 }

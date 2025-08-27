@@ -520,6 +520,32 @@ const deleteWorkErrorController = async (req: Request, res: Response): Promise<a
     }
 }
 
+const findWorkController = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const {date} = req.body;
+        if (!date) {
+            return res.status(200).json({
+                message: "Không nhận được dữ liệu",
+                data: false,
+                code: 1
+            })
+        }
+        const result: ReturnData = await adminService.findWorkService(date);
+        return res.status(200).json({
+            message: result.message,
+            data: result.data,
+            code: result.code
+        })
+    } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Xảy ra lỗi ở controller",
+            data: false,
+            code: -1
+        })
+    }
+}
+
 export default {
     addAccountController, getAccountListController, findAccountController,
     getAccountInformationController, updateEmployeeAccountController,
@@ -527,5 +553,5 @@ export default {
     addKeepSalaryController, updateSalaryDeductionController, addMissShiftController,
     deleteSalaryDeductionController, payKeepSalaryController, cancelPayController,
     deleteKeepSalaryController, getStepSalaryController, updateStepSalaryController,
-    updateDeductionController, getWorkErrorController, deleteWorkErrorController
+    updateDeductionController, getWorkErrorController, deleteWorkErrorController, findWorkController
 }
