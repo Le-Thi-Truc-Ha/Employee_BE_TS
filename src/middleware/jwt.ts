@@ -8,7 +8,7 @@ dotenv.config();
 const createJWT = (payload: PayloadData): any => {
     try {
         const key: Secret = (process.env.JWT_SECRET || "OTHERGOC2018");
-        const token: string = jwt.sign(payload, key, {expiresIn: "1d"});
+        const token: string = jwt.sign(payload, key, {expiresIn: "14d"});
         return token;
     } catch(e) {
         console.log(e);
