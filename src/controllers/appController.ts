@@ -25,18 +25,19 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
                 code: result.code
             })
         }
-        res.cookie("token", result.data.token, {
-            httpOnly: true, 
-            secure: true,
-            sameSite: "none",
-            maxAge: 60 * 1000 * 60 * 24
-        });
+        // res.cookie("token", result.data.token, {
+        //     httpOnly: true, 
+        //     secure: true,
+        //     sameSite: "none",
+        //     maxAge: 60 * 1000 * 60 * 24
+        // });
         return res.status(200).json({
             message: result.message,
             data: {
                 id: result.data?.id,
                 roleId: result.data?.roleId,
-                gender: result.data?.gender
+                gender: result.data?.gender,
+                token: result.data.token
             },
             code: result.code
         })
@@ -51,7 +52,18 @@ const loginController = async (req: Request, res: Response): Promise<any> => {
 }
 
 const reloadPageController = async (req: Request, res: Response): Promise<any> => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    // if (!token) {
+    //     return res.status(200).json({
+    //         message: "Bạn chưa đăng nhập",
+    //         data: false,
+    //         code: 1,
+    //     });
+    // }
+
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
     if (!token) {
         return res.status(200).json({
             message: "Bạn chưa đăng nhập",
@@ -88,7 +100,18 @@ const reloadPageController = async (req: Request, res: Response): Promise<any> =
 }
 
 const logoutController = async (req: Request, res: Response): Promise<any> => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    // if (!token) {
+    //     return res.status(200).json({
+    //         message: "Bạn chưa đăng nhập",
+    //         data: false,
+    //         code: 1,
+    //     });
+    // }
+
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
     if (!token) {
         return res.status(200).json({
             message: "Bạn chưa đăng nhập",
@@ -107,9 +130,9 @@ const logoutController = async (req: Request, res: Response): Promise<any> => {
         });
     }
 
-    res.clearCookie("token", {
-        httpOnly: true
-    });
+    // res.clearCookie("token", {
+    //     httpOnly: true
+    // });
 
     return res.status(200).json({
         message: "Đăng xuất thành công",
@@ -119,7 +142,18 @@ const logoutController = async (req: Request, res: Response): Promise<any> => {
 }
 
 const getProfileController = async (req: Request, res: Response): Promise<any> => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    // if (!token) {
+    //     return res.status(200).json({
+    //         message: "Bạn chưa đăng nhập",
+    //         data: false,
+    //         code: 1,
+    //     });
+    // }
+
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
     if (!token) {
         return res.status(200).json({
             message: "Bạn chưa đăng nhập",
@@ -156,7 +190,18 @@ const getProfileController = async (req: Request, res: Response): Promise<any> =
 }
 
 const changeProfileController = async (req: Request, res: Response): Promise<any> => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    // if (!token) {
+    //     return res.status(200).json({
+    //         message: "Bạn chưa đăng nhập",
+    //         data: false,
+    //         code: 1,
+    //     });
+    // }
+
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
     if (!token) {
         return res.status(200).json({
             message: "Bạn chưa đăng nhập",
@@ -201,7 +246,18 @@ const changeProfileController = async (req: Request, res: Response): Promise<any
 }
 
 const changePasswordController = async (req: Request, res: Response): Promise<any> => {
-    const token = req.cookies?.token;
+    // const token = req.cookies?.token;
+    // if (!token) {
+    //     return res.status(200).json({
+    //         message: "Bạn chưa đăng nhập",
+    //         data: false,
+    //         code: 1,
+    //     });
+    // }
+
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
     if (!token) {
         return res.status(200).json({
             message: "Bạn chưa đăng nhập",
