@@ -282,14 +282,14 @@ const checkErrorWorkService = async (): Promise<ReturnData> => {
             totalHour += Math.round((dayjs(item.endTime, "HH:mm").diff(dayjs(item.startTime, "HH:mm"), "hour", true)) * 10) / 10;
         });
         if (dateBefore.day() == 0) {
-            if (totalHour > 44) {
+            if (totalHour > 44.5) {
                 await prisma.workError.create({
                     data: {
                         date: dateString,
                         workErrorType: 2
                     }
                 })
-            } else if (totalHour < 44) {
+            } else if (totalHour < 44.5) {
                 await prisma.workError.create({
                     data: {
                         date: dateString,
@@ -298,14 +298,14 @@ const checkErrorWorkService = async (): Promise<ReturnData> => {
                 })
             }
         } else {
-            if (totalHour > 38) {
+            if (totalHour > 38.5) {
                 await prisma.workError.create({
                     data: {
                         date: dateString,
                         workErrorType: 2
                     }
                 })
-            } else if (totalHour < 38) {
+            } else if (totalHour < 38.5) {
                 await prisma.workError.create({
                     data: {
                         date: dateString,
