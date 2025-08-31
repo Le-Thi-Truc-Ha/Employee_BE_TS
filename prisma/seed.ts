@@ -7,20 +7,32 @@ import { genSalt, hash } from 'bcrypt-ts';
 
 const prisma = new PrismaClient();
 const name = [
-    "Hà", "Góc", "Thúy", "Thu", "Minh", "Thương", "Thảo",
-    "Đoan", "Khôi", "Luận", "Huy", "Duy", "Hào"
+    "Hà", "Góc", "Thúy", 
+    "Thu", "Minh", "Thương", 
+    "Thảo", "Quyên", "Nhung",
+    "Thu", "Hương",
+
+    "Khôi", "Luận", 
+    "Huy", "Duy", "Hào"
 ];
 const gender = ["Nữ", "Nam"];
 const userName = [
-    "ha50927", "goc78878", "thuy18614", "thu69448", "minh48560", "thuong81266", "thao44532",
-    "doan26516", "khoi89128", "luan72436", "huy74802", "duy19756", "hao51603"
+    "ha50927", "goc78878", "thuy18614", 
+    "thu69448", "minh48560", "thuong81266", 
+    "thao44532", "quyen90578", "nhung29937",
+    "thu37484", "huong84599",
+
+    "khoi89128", "luan72436", 
+    "huy74802", "duy19756", "hao51603"
 ]
 const email = [
     "ha50927@admin.goc.com", "goc78878@admin.goc.com", "thuy18614@employee.goc.com",
     "thu69448@employee.goc.com", "minh48560@employee.goc.com", "thuong81266@employee.goc.com",
-    "thao44532@employee.goc.com", "doan26516@employee.goc.com", "khoi89128@employee.goc.com",
-    "luan72436@employee.goc.com", "huy74802@employee.goc.com", "duy19756@employee.goc.com",
-    "hao51603@employee.goc.com"
+    "thao44532@employee.goc.com", "quyen90578@employee.goc.com", "nhung29937@employee.goc.com",
+    "thu37484@employee.goc.com", "huong84599@employee.goc.com",
+    
+    "khoi89128@employee.goc.com", "luan72436@employee.goc.com", 
+    "huy74802@employee.goc.com", "duy19756@employee.goc.com", "hao51603@employee.goc.com"
 ]
 const salary = [
     null, null, 2, 1, 2, 2, 2,
