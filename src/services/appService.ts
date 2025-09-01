@@ -279,7 +279,7 @@ const checkErrorWorkService = async (): Promise<ReturnData> => {
         }
         let totalHour = 0;
         listWork.map((item) => {
-            totalHour += Math.round((dayjs(item.endTime, "HH:mm").diff(dayjs(item.startTime, "HH:mm"), "hour", true)) * 10) / 10;
+            totalHour += Math.round((dayjs(item.endTime, "HH:mm").diff(dayjs(item.startTime, "HH:mm"), "hour", true)) * 100) / 100;
         });
         if (dateBefore.day() == 0) {
             if (totalHour > 44.5) {

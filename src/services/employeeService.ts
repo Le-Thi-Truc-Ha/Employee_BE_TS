@@ -9,12 +9,12 @@ dayjs.extend(customParseFormat);
 const calculateSalary = (salary: string, startTime: string, endTime: string): string => {
     let result: string = "";
     const salaryArray = salary.split("=");
-    const hour = Math.round((dayjs(endTime, "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 10) / 10;
+    const hour = Math.round((dayjs(endTime, "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 100) / 100;
     if (salaryArray.length == 1) {
         result = (parseInt(salaryArray[0]) * hour).toLocaleString("en-US").concat("đ");
     } else {
-        const hourWeekday = Math.round((dayjs(endTime, "HH:mm").diff(dayjs("12:00", "HH:mm"), "hour", true)) * 10) / 10;
-        const hourWeekend = Math.round((dayjs("12:00", "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 10) / 10;
+        const hourWeekday = Math.round((dayjs(endTime, "HH:mm").diff(dayjs("12:00", "HH:mm"), "hour", true)) * 100) / 100;
+        const hourWeekend = Math.round((dayjs("12:00", "HH:mm").diff(dayjs(startTime, "HH:mm"), "hour", true)) * 100) / 100;
         result = (parseInt(salaryArray[0]) * hourWeekday + parseInt(salaryArray[1]) * hourWeekend).toLocaleString("en-US").concat("đ");
     }
     return result;
