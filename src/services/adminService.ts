@@ -1072,7 +1072,8 @@ const findWorkService = async (date: string): Promise<ReturnData> => {
                 endTime: true,
                 account: {
                     select: {
-                        name: true
+                        name: true,
+                        gender: true
                     }
                 }
             }
