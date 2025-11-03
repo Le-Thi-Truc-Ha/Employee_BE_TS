@@ -556,16 +556,19 @@ const addKeepSalaryService = async (idSelect: number[], date: string, salary: st
                     }
                 })
             }
-            const updateOldWorkStatus = await tx.work.updateMany({
-                where: {
-                    id: {
-                        in: oldWorkId
+            if (oldWorkId && oldWorkId.length > 0) {
+                const updateOldWorkStatus = await tx.work.updateMany({
+                    where: {
+                        id: {
+                            in: oldWorkId
+                        }
+                    },
+                    data: {
+                        status: 1
                     }
-                },
-                data: {
-                    status: 1
-                }
-            })
+                })
+            }
+            
             const updateNewWorkStatus = await tx.work.updateMany({
                 where: {
                     id: {
