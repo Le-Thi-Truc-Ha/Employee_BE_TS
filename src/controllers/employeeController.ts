@@ -273,7 +273,7 @@ const findWorkController = async (req: Request, res: Response): Promise<any> => 
 const getSalaryDeductionController = async (req: Request, res: Response): Promise<any> => {
     try {
         const {workIdList, month, year} = req.body;
-        if (!workIdList || !month || !year) {
+        if (!workIdList || month == undefined || !year) {
             return res.status(200).json({
                 message: "Không có dữ liệu ca làm",
                 data: false,
