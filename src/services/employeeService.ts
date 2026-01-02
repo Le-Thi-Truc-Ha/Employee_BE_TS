@@ -129,17 +129,6 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
                         }
                     })
                     if (titleDeduction?.title == "Mô tả") {
-                        await sendEmail(
-                            "hale071204@gmail.com",
-                            "Ca làm cần chú ý lỗi",
-                            `
-                                <h1>Tên: ${existAccount.name}</h1>
-                                <h1>Username: ${existAccount.userName}</h1>
-                                <h1>Ca làm ngày: ${date}\n</h1>
-                                <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
-                                <h1>Nội dung: ${item.detail}</h1>
-                            `
-                        )
                         return 0;
                     } else if (titleDeduction?.title == "Số tiền") {
                         return parseInt(item.quantity);
@@ -151,16 +140,6 @@ const addWorkService = async (date: string, startTime: string, endTime: string, 
                         } else if (parseInt(item.quantity) >= 30 && parseInt(item.quantity) <= 60) {
                             return costLate.filter((item)  => (item.name == nameLate[2]))[0].price;
                         } else {
-                            await sendEmail(
-                                "hale071204@gmail.com",
-                                "Xem lại thời gian đi trễ",
-                                `
-                                    <h1>Tên: ${existAccount.name}</h1>
-                                    <h1>Username: ${existAccount.userName}</h1>
-                                    <h1>Ca làm ngày: ${date}\n</h1>
-                                    <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
-                                `
-                            )
                             return 0;
                         }
                     } else if (titleDeduction?.title == "Số lượng") {
@@ -593,17 +572,6 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                         }
                     })
                     if (titleDeduction?.title == "Mô tả") {
-                        await sendEmail(
-                            "hale071204@gmail.com",
-                            "Ca làm cần chú ý lỗi",
-                            `
-                                <h1>Tên: ${existAccount.name}</h1>
-                                <h1>Username: ${existAccount.userName}</h1>
-                                <h1>Ca làm ngày: ${date}\n</h1>
-                                <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
-                                <h1>Nội dung: ${item.detail}</h1>
-                            `
-                        )
                         return 0;
                     } else if (titleDeduction?.title == "Số tiền") {
                         return parseInt(item.quantity);
@@ -615,16 +583,6 @@ const updateWorkService = async (workId: number, date: string, startTime: string
                         } else if (parseInt(item.quantity) >= 30 && parseInt(item.quantity) <= 60) {
                             return costLate[2].price;
                         } else {
-                            await sendEmail(
-                                "hale071204@gmail.com",
-                                "Xem lại thời gian đi trễ",
-                                `
-                                    <h1>Tên: ${existAccount.name}</h1>
-                                    <h1>Username: ${existAccount.userName}</h1>
-                                    <h1>Ca làm ngày: ${date}\n</h1>
-                                    <h1>Thời gian: ${startTime} - ${endTime}\n</h1>
-                                `
-                            )
                             return 0;
                         }
                     } else if (titleDeduction?.title == "Số lượng") {
