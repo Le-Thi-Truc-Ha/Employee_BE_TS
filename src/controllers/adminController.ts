@@ -331,7 +331,7 @@ const deleteSalaryDeductionController = async (req: Request, res: Response): Pro
 const payKeepSalaryController = async (req: Request, res: Response): Promise<any> => {
     try {
         const {employeeId, month, year} = req.body;
-        if (!employeeId || !month || !year) {
+        if (!employeeId || month == undefined || !year) {
             return res.status(200).json({
                 message: "Không nhận được dữ liệu",
                 data: false,
@@ -357,7 +357,7 @@ const payKeepSalaryController = async (req: Request, res: Response): Promise<any
 const cancelPayController = async (req: Request, res: Response): Promise<any> => {
     try {
         const {employeeId, month, year} = req.body;
-        if (!employeeId || !month || !year) {
+        if (!employeeId || month == undefined || !year) {
             return res.status(200).json({
                 message: "Không nhận được dữ liệu",
                 data: false,
