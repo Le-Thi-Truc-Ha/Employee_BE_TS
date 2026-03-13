@@ -9,7 +9,7 @@ import axios from "axios";
 
 dotenv.config();
 
-const port: number = process.env.PORT || 3000;
+const port: number = parseInt(process.env.PORT || "3000", 10);
 const app: Application = express();
 
 configCors(app);
