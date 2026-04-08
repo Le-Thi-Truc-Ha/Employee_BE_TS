@@ -3,19 +3,6 @@ import { ReturnData } from "../configs/interfaces";
 import appService from "../services/appService";
 import jwt from "../middleware/jwt";
 
-const rootController = async (req: Request, res: Response): Promise<any> => {
-    try {
-        return res.status(200).send("Server is alive");
-    } catch(e) {
-        console.log(e);
-        return res.status(500).json({
-            message: "Xảy ra lỗi ở controller",
-            data: false,
-            code: -1
-        })
-    }
-}
-
 const awakeBackendController = (req: Request, res: Response): any => {
     console.log("Awake Backend");
     return res.status(200).send("Awake Success");
@@ -333,7 +320,7 @@ const checkErrorWorkController = async (req: Request, res: Response): Promise<an
 } 
 
 export default {
-    rootController, awakeBackendController, loginController, reloadPageController, logoutController, 
+    awakeBackendController, loginController, reloadPageController, logoutController, 
     getProfileController, changeProfileController, changePasswordController,
     checkErrorWorkController
 }
