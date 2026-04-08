@@ -9,7 +9,7 @@ import axios from "axios";
 
 dotenv.config();
 
-const port: number = parseInt(process.env.PORT || "3000", 10);
+const PORT = process.env.PORT || 3000;
 const app: Application = express();
 
 configCors(app);
@@ -30,6 +30,6 @@ cron.schedule("0 8 * * *", async () => {
     timezone: "Asia/Ho_Chi_Minh"
 })
 
-app.listen(port, () => {
-    console.log("Backend is running on the port: " + port)
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
