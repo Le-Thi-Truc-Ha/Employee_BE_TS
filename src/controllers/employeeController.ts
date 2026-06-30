@@ -101,6 +101,18 @@ const getWorkListController = async (req: Request, res: Response): Promise<any> 
             })
         }
 
+        if (req.user && typeof req.user != "string") {
+            if (req.user.roleId == 2) {
+                if (req.user.id != accountId) {
+                    return res.status(200).json({
+                        message: "Không có quyền truy cập",
+                        data: false,
+                        code: 1
+                    });
+                }
+            }
+        }
+
         const result = await employeeService.getWorkListService(accountId, month, year);
         return res.status(200).json({
             message: result.message,
@@ -128,6 +140,18 @@ const deleteWorkController = async (req: Request, res: Response): Promise<any> =
                 data: false,
                 code: 1
             })
+        }
+
+        if (req.user && typeof req.user != "string") {
+            if (req.user.roleId == 2) {
+                if (req.user.id != accountId) {
+                    return res.status(200).json({
+                        message: "Không có quyền truy cập",
+                        data: false,
+                        code: 1
+                    });
+                }
+            }
         }
 
         const result: ReturnData = await employeeService.deleteWorkService(workId, accountId);
